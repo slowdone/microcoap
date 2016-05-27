@@ -26,8 +26,9 @@ static int coap_parse_options_payload(coap_packet_t *pkt,
                                       const uint8_t *buf, size_t buflen);
 static int coap_parse_option(coap_option_t *option, uint16_t *running_delta,
                              const uint8_t **buf, size_t buflen);
-static int coap_find_options(const coap_packet_t *pkt, coap_option_num_t num,
-                             const coap_option_t *first, uint8_t *count);
+static const coap_option_t *coap_find_options(const coap_packet_t *pkt,
+                                              coap_option_num_t num,
+                                              uint8_t *count);
 static void coap_option_nibble(uint32_t value, uint8_t *nibble);
 static void coap_dump_header(const coap_header_t *hdr);
 static void coap_dump_options(const coap_option_t *opts, const size_t numopt);
@@ -197,9 +198,11 @@ static int coap_parse_options_payload(coap_packet_t *pkt,
 }
 
 // options are always stored consecutively, so can return a block with same option num
-static int coap_find_options(const coap_packet_t *pkt, coap_option_num_t num,
-                             const coap_option_t *first, uint8_t *count)
+static const coap_option_t *coap_find_options(const coap_packet_t *pkt,
+                                              coap_option_num_t num,
+                                              uint8_t *count)
 {
+    const coap_option_t * first = NULL;
     // FIXME, options is always sorted, can find faster than this
     *count = 0;
     for (size_t i = 0; i < pkt->numopts; ++i) {
@@ -213,10 +216,7 @@ static int coap_find_options(const coap_packet_t *pkt, coap_option_num_t num,
             break;
         }
     }
-    if (first) {
-        return COAP_ERR_NONE;
-    }
-    return COAP_ERR_OPTION_NOT_FOUND;
+    return first;
 }
 
 static void coap_option_nibble(uint32_t value, uint8_t *nibble)
@@ -400,28 +400,25 @@ int coap_handle_req(const coap_endpoint_t *endpoints, coap_rw_buffer_t *scratch,
     const coap_option_t *opt = NULL;
     uint8_t count;
     int i;
-    const coap_endpoint_t *ep;
-
-    for (ep = endpoints; NULL != ep->handler; ++ep) {
-        if (ep->method != inpkt->hdr.code) {
-            continue;
-        }
-        if(!coap_find_options(inpkt, COAP_OPTION_URI_PATH, opt, &count)) {
-            if (count != ep->path->count) {
-                continue;
-            }
-            for (i = 0; i < count; ++i) {
-                if (opt[i].buf.len != strlen(ep->path->elems[i])) {
-                    break;
+    const coap_endpoint_t *ep = endpoints;
+    while (ep->handler) {
+        if((ep->method == inpkt->hdr.code) &&
+           (opt = coap_find_options(inpkt, COAP_OPTION_URI_PATH, &count))) {
+            if (count == ep->path->count) {
+                for (i = 0; i < count; i++) {
+                    if (opt[i].buf.len != strlen(ep->path->elems[i])) {
+                        break;
+                    }
+                    if (memcmp(ep->path->elems[i], opt[i].buf.p, opt[i].buf.len)) {
+                        break;
+                    }
                 }
-                if (memcmp(ep->path->elems[i], opt[i].buf.p, opt[i].buf.len)) {
-                    break;
+                if (i == count) {
+                    return ep->handler(scratch, inpkt, outpkt, inpkt->hdr.id);
                 }
-            }
-            if (i == count) {
-                return ep->handler(scratch, inpkt, outpkt, inpkt->hdr.id);
             }
         }
+        ep++;
     }
 
     coap_make_response(scratch, outpkt, NULL, 0, inpkt->hdr.id, &inpkt->tok,
@@ -430,7 +427,7 @@ int coap_handle_req(const coap_endpoint_t *endpoints, coap_rw_buffer_t *scratch,
     return 0;
 }
 
-int coap_build_endpoints(coap_endpoint_t *endpoints, char *buf, size_t buflen)
+int coap_build_endpoints(const coap_endpoint_t *endpoints, char *buf, size_t buflen)
 {
     if (buflen < 4) { /* <>; */
         return COAP_ERR_BUFFER_TOO_SMALL;

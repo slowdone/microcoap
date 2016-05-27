@@ -84,11 +84,10 @@ typedef enum
 //http://tools.ietf.org/html/rfc7252#section-12.1.1
 typedef enum
 {
-    COAP_METHOD_GET     = (1 << 0),
-    COAP_METHOD_POST    = (1 << 1),
-    COAP_METHOD_PUT     = (1 << 2),
-    COAP_METHOD_DELETE  = (1 << 3),
-    COAP_METHOD_ALL     = (COAP_METHOD_GET | COAP_METHOD_POST | COAP_METHOD_PUT | COAP_METHOD_DELETE)
+    COAP_METHOD_GET     = 1,
+    COAP_METHOD_POST    = 2,
+    COAP_METHOD_PUT     = 3,
+    COAP_METHOD_DELETE  = 4,
 } coap_method_t;
 
 //http://tools.ietf.org/html/rfc7252#section-12.1.1
@@ -205,8 +204,8 @@ int coap_make_response(coap_rw_buffer_t *scratch, coap_packet_t *pkt,
                        coap_content_type_t content_type);
 int coap_handle_req(const coap_endpoint_t *endpoints, coap_rw_buffer_t *scratch,
                     const coap_packet_t *inpkt, coap_packet_t *outpkt);
-int coap_build_endpoints(coap_endpoint_t *endpoints, char *buf, size_t buflen);
-void endpoint_setup(coap_endpoint_t *endpoints);
+int coap_build_endpoints(const coap_endpoint_t *endpoints, char *buf, size_t buflen);
+void endpoint_setup(const coap_endpoint_t *endpoints);
 
 #ifdef __cplusplus
 }

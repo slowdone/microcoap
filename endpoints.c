@@ -11,16 +11,16 @@ void build_rsp(void);
 #ifdef ARDUINO
 #include "Arduino.h"
 static int led = 6;
-void endpoint_setup(void)
+void endpoint_setup(coap_endpoint_t *endpoints)
 {
     pinMode(led, OUTPUT);
-    build_rsp();
+    coap_build_endpoints(endpoints, rsp, rsplen);
 }
 #else
 #include <stdio.h>
-void endpoint_setup(void)
+void endpoint_setup(coap_endpoint_t *endpoints)
 {
-    build_rsp();
+    coap_build_endpoints(endpoints, rsp, rsplen);
 }
 #endif
 
@@ -69,44 +69,3 @@ const coap_endpoint_t endpoints[] =
     {COAP_METHOD_PUT, handle_put_light, &path_light, NULL},
     {(coap_method_t)0, NULL, NULL, NULL}
 };
-
-void build_rsp(void)
-{
-    uint16_t len = rsplen;
-    const coap_endpoint_t *ep = endpoints;
-    int i;
-
-    len--; // Null-terminated string
-
-    while(NULL != ep->handler)
-    {
-        if (NULL == ep->core_attr) {
-            ep++;
-            continue;
-        }
-
-        if (0 < strlen(rsp)) {
-            strncat(rsp, ",", len);
-            len--;
-        }
-
-        strncat(rsp, "<", len);
-        len--;
-
-        for (i = 0; i < ep->path->count; i++) {
-            strncat(rsp, "/", len);
-            len--;
-
-            strncat(rsp, ep->path->elems[i], len);
-            len -= strlen(ep->path->elems[i]);
-        }
-
-        strncat(rsp, ">;", len);
-        len -= 2;
-
-        strncat(rsp, ep->core_attr, len);
-        len -= strlen(ep->core_attr);
-
-        ep++;
-    }
-}

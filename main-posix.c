@@ -40,7 +40,7 @@ int main(int argc, char **argv)
 #endif /* IPV6 */
     bind(fd,(struct sockaddr *)&servaddr, sizeof(servaddr));
 
-    endpoint_setup();
+    endpoint_setup(endpoints);
 
     while(1)
     {
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
             size_t rsplen = sizeof(buf);
             coap_packet_t rsppkt;
 #ifdef MICROCOAP_DEBUG
-            coap_dumpPacket(&pkt);
+            coap_dump_packet(&pkt);
 #endif
             coap_handle_req(endpoints, &scratch_buf, &pkt, &rsppkt);
 
@@ -76,7 +76,7 @@ int main(int argc, char **argv)
                 printf("\n");
 #endif
 #ifdef MICROCOAP_DEBUG
-                coap_dumpPacket(&rsppkt);
+                coap_dump_packet(&rsppkt);
 #endif
 
                 sendto(fd, buf, rsplen, 0, (struct sockaddr *)&cliaddr, sizeof(cliaddr));

@@ -12,36 +12,36 @@ extern "C" {
 #define MAXOPT 16
 
 //http://tools.ietf.org/html/rfc7252#section-3
-typedef struct
+typedef struct coap_header
 {
     uint8_t ver;                /* CoAP version number */
     uint8_t t;                  /* CoAP Message Type */
     uint8_t tkl;                /* Token length: indicates length of the Token field */
-    uint8_t code;               /* CoAP status code. Can be request (0.xx), success reponse (2.xx), 
-                                 * client error response (4.xx), or rever error response (5.xx) 
+    uint8_t code;               /* CoAP status code. Can be request (0.xx), success reponse (2.xx),
+                                 * client error response (4.xx), or rever error response (5.xx)
                                  * For possible values, see http://tools.ietf.org/html/rfc7252#section-12.1 */
-    uint8_t id[2];
+    uint16_t id;
 } coap_header_t;
 
-typedef struct
+typedef struct coap_buffer
 {
     const uint8_t *p;
     size_t len;
 } coap_buffer_t;
 
-typedef struct
+typedef struct coap_rw_buffer
 {
     uint8_t *p;
     size_t len;
 } coap_rw_buffer_t;
 
-typedef struct
+typedef struct coap_option
 {
     uint8_t num;                /* Option number. See http://tools.ietf.org/html/rfc7252#section-5.10 */
     coap_buffer_t buf;          /* Option value */
 } coap_option_t;
 
-typedef struct
+typedef struct coap_packet
 {
     coap_header_t hdr;          /* Header of the packet */
     coap_buffer_t tok;          /* Token value, size as specified by hdr.tkl */
@@ -53,7 +53,10 @@ typedef struct
 
 /////////////////////////////////////////
 
-//http://tools.ietf.org/html/rfc7252#section-12.2
+/*
+ * http://tools.ietf.org/html/rfc7252#section-12.2
+ * https://tools.ietf.org/html/draft-ietf-core-block-20#section-6
+ */
 typedef enum
 {
     COAP_OPTION_IF_MATCH = 1,
@@ -69,6 +72,11 @@ typedef enum
     COAP_OPTION_URI_QUERY = 15,
     COAP_OPTION_ACCEPT = 17,
     COAP_OPTION_LOCATION_QUERY = 20,
+    /* Block-wise transfers in CoAP, options */
+    COAP_OPTION_BLOCK2 = 23,
+    COAP_OPTION_BLOCK1 = 27,
+    COAP_OPTION_SIZE2 = 28,
+    /* END Block-wise transfers in CoAP */
     COAP_OPTION_PROXY_URI = 35,
     COAP_OPTION_PROXY_SCHEME = 39
 } coap_option_num_t;
@@ -76,10 +84,11 @@ typedef enum
 //http://tools.ietf.org/html/rfc7252#section-12.1.1
 typedef enum
 {
-    COAP_METHOD_GET = 1,
-    COAP_METHOD_POST = 2,
-    COAP_METHOD_PUT = 3,
-    COAP_METHOD_DELETE = 4
+    COAP_METHOD_GET     = (1 << 0),
+    COAP_METHOD_POST    = (1 << 1),
+    COAP_METHOD_PUT     = (1 << 2),
+    COAP_METHOD_DELETE  = (1 << 3),
+    COAP_METHOD_ALL     = (COAP_METHOD_GET | COAP_METHOD_POST | COAP_METHOD_PUT | COAP_METHOD_DELETE)
 } coap_method_t;
 
 //http://tools.ietf.org/html/rfc7252#section-12.1.1
@@ -93,25 +102,49 @@ typedef enum
 
 //http://tools.ietf.org/html/rfc7252#section-5.2
 //http://tools.ietf.org/html/rfc7252#section-12.1.2
+/* https://tools.ietf.org/html/draft-ietf-core-block-20#section-6 */
 #define MAKE_RSPCODE(clas, det) ((clas << 5) | (det))
 typedef enum
 {
+    COAP_RSPCODE_EMPTY = MAKE_RSPCODE(0, 0),
+    /* Success */
+    COAP_RSPCODE_CREATED = MAKE_RSPCODE(2, 1),
+    COAP_RSPCODE_DELETED = MAKE_RSPCODE(2, 2),
+    COAP_RSPCODE_VALID = MAKE_RSPCODE(2, 3),
+    COAP_RSPCODE_CHANGED = MAKE_RSPCODE(2, 4),
     COAP_RSPCODE_CONTENT = MAKE_RSPCODE(2, 5),
-    COAP_RSPCODE_NOT_FOUND = MAKE_RSPCODE(4, 4),
+    COAP_RSPCODE_CONTINUE = MAKE_RSPCODE(2, 31),
+    /* Client Errors */
     COAP_RSPCODE_BAD_REQUEST = MAKE_RSPCODE(4, 0),
-    COAP_RSPCODE_CHANGED = MAKE_RSPCODE(2, 4)
+    COAP_RSPCODE_UNAUTHORIZED = MAKE_RSPCODE(4, 1),
+    COAP_RSPCODE_BAD_OPTION = MAKE_RSPCODE(4, 2),
+    COAP_RSPCODE_FORBIDDEN = MAKE_RSPCODE(4, 3),
+    COAP_RSPCODE_NOT_FOUND = MAKE_RSPCODE(4, 4),
+    COAP_RSPCODE_METHOD_NOT_ALLOWED = MAKE_RSPCODE(4, 5),
+    COAP_RSPCODE_NOT_ACCEPTABLE = MAKE_RSPCODE(4, 6),
+    COAP_RSPCODE_REQUEST_ENTITY_INCOMPLETE = MAKE_RSPCODE(4,8),
+    COAP_RSPCODE_PRECONDITION_FAILED = MAKE_RSPCODE(4, 12),
+    COAP_RSPCODE_REQUEST_ENTITY_TO_LARGE = MAKE_RSPCODE(4, 13),
+    COAP_RSPCODE_UNSUPPORTED_CONTENT_FMT = MAKE_RSPCODE(4, 15),
+    /* Server Errors */
+    COAP_RSPCODE_INTERNAL_SERVER_ERROR = MAKE_RSPCODE(5, 0),
+    COAP_RSPCODE_NOT_IMPLEMENTED = MAKE_RSPCODE(5, 1),
+    COAP_RSPCODE_BAD_GATEWAY = MAKE_RSPCODE(5, 2),
+    COAP_RSPCODE_SERVICE_UNAVAILABLE = MAKE_RSPCODE(5, 3),
+    COAP_RSPCODE_GATEWAY_TIMEOUT = MAKE_RSPCODE(5, 4),
+    COAP_RSPCODE_NO_PROXY_SUPPORT = MAKE_RSPCODE(5, 5),
 } coap_responsecode_t;
 
 //http://tools.ietf.org/html/rfc7252#section-12.3
 typedef enum
 {
-    COAP_CONTENTTYPE_NONE = -1, // bodge to allow us not to send option block
-    COAP_CONTENTTYPE_TEXT_PLAIN = 0,
-    COAP_CONTENTTYPE_APPLICATION_LINKFORMAT = 40,
-    COAP_CONTENTTYPE_APPLICATION_XML = 41,
-    COAP_CONTENTTYPE_APPLICATION_OCTECT_STREAM = 42,
-    COAP_CONTENTTYPE_APPLICATION_EXI = 47,
-    COAP_CONTENTTYPE_APPLICATION_JSON = 50,
+    COAP_CONTENTTYPE_NONE                       = -1, // bodge to allow us not to send option block
+    COAP_CONTENTTYPE_TEXT_PLAIN                 = 0,
+    COAP_CONTENTTYPE_APPLICATION_LINKFORMAT     = 40,
+    COAP_CONTENTTYPE_APPLICATION_XML            = 41,
+    COAP_CONTENTTYPE_APPLICATION_OCTECT_STREAM  = 42,
+    COAP_CONTENTTYPE_APPLICATION_EXI            = 47,
+    COAP_CONTENTTYPE_APPLICATION_JSON           = 50,
 } coap_content_type_t;
 
 ///////////////////////
@@ -134,25 +167,26 @@ typedef enum
 
 ///////////////////////
 
-typedef int (*coap_endpoint_func)(coap_rw_buffer_t *scratch, const coap_packet_t *inpkt, coap_packet_t *outpkt, uint8_t id_hi, uint8_t id_lo);
+typedef int (*coap_endpoint_func)(coap_rw_buffer_t *scratch, const coap_packet_t *inpkt, coap_packet_t *outpkt, uint16_t id);
 #define MAX_SEGMENTS 2  // 2 = /foo/bar, 3 = /foo/bar/baz
-typedef struct
+
+typedef struct coap_endpoint_path
 {
     int count;
     const char *elems[MAX_SEGMENTS];
 } coap_endpoint_path_t;
 
-typedef struct
+typedef struct coap_endpoint
 {
     coap_method_t method;               /* (i.e. POST, PUT or GET) */
-    coap_endpoint_func handler;         /* callback function which handles this 
-                                         * type of endpoint (and calls 
+    coap_endpoint_func handler;         /* callback function which handles this
+                                         * type of endpoint (and calls
                                          * coap_make_response() at some point) */
-    const coap_endpoint_path_t *path;   /* path towards a resource (i.e. foo/bar/) */ 
+    const coap_endpoint_path_t *path;   /* path towards a resource (i.e. foo/bar/) */
     const char *core_attr;              /* the 'ct' attribute, as defined in RFC7252, section 7.2.1.:
-                                         * "The Content-Format code "ct" attribute 
-                                         * provides a hint about the 
-                                         * Content-Formats this resource returns." 
+                                         * "The Content-Format code "ct" attribute
+                                         * provides a hint about the
+                                         * Content-Formats this resource returns."
                                          * (Section 12.3. lists possible ct values.) */
 } coap_endpoint_t;
 
@@ -161,11 +195,11 @@ typedef struct
 void coap_dumpPacket(coap_packet_t *pkt);
 int coap_parse(coap_packet_t *pkt, const uint8_t *buf, size_t buflen);
 int coap_buffer_to_string(char *strbuf, size_t strbuflen, const coap_buffer_t *buf);
-const coap_option_t *coap_findOptions(const coap_packet_t *pkt, uint8_t num, uint8_t *count);
+const coap_option_t *coap_find_options(const coap_packet_t *pkt, uint8_t num, uint8_t *count);
 int coap_build(uint8_t *buf, size_t *buflen, const coap_packet_t *pkt);
 void coap_dump(const uint8_t *buf, size_t buflen, bool bare);
-int coap_make_response(coap_rw_buffer_t *scratch, coap_packet_t *pkt, const uint8_t *content, size_t content_len, uint8_t msgid_hi, uint8_t msgid_lo, const coap_buffer_t* tok, coap_responsecode_t rspcode, coap_content_type_t content_type);
-int coap_handle_req(coap_rw_buffer_t *scratch, const coap_packet_t *inpkt, coap_packet_t *outpkt);
+int coap_make_response(coap_rw_buffer_t *scratch, coap_packet_t *pkt, const uint8_t *content, size_t content_len, uint16_t msgid, const coap_buffer_t* tok, coap_responsecode_t rspcode, coap_content_type_t content_type);
+int coap_handle_req(const coap_endpoint_t *endpoints, coap_rw_buffer_t *scratch, const coap_packet_t *inpkt, coap_packet_t *outpkt);
 void coap_option_nibble(uint32_t value, uint8_t *nibble);
 void coap_setup(void);
 void endpoint_setup(void);

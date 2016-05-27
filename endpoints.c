@@ -12,8 +12,8 @@ void build_rsp(void);
 #include "Arduino.h"
 static int led = 6;
 void endpoint_setup(void)
-{                
-    pinMode(led, OUTPUT);     
+{
+    pinMode(led, OUTPUT);
     build_rsp();
 }
 #else
@@ -25,21 +25,21 @@ void endpoint_setup(void)
 #endif
 
 static const coap_endpoint_path_t path_well_known_core = {2, {".well-known", "core"}};
-static int handle_get_well_known_core(coap_rw_buffer_t *scratch, const coap_packet_t *inpkt, coap_packet_t *outpkt, uint8_t id_hi, uint8_t id_lo)
+static int handle_get_well_known_core(coap_rw_buffer_t *scratch, const coap_packet_t *inpkt, coap_packet_t *outpkt, uint16_t id)
 {
-    return coap_make_response(scratch, outpkt, (const uint8_t *)rsp, strlen(rsp), id_hi, id_lo, &inpkt->tok, COAP_RSPCODE_CONTENT, COAP_CONTENTTYPE_APPLICATION_LINKFORMAT);
+    return coap_make_response(scratch, outpkt, (const uint8_t *)rsp, strlen(rsp), id, &inpkt->tok, COAP_RSPCODE_CONTENT, COAP_CONTENTTYPE_APPLICATION_LINKFORMAT);
 }
 
 static const coap_endpoint_path_t path_light = {1, {"light"}};
-static int handle_get_light(coap_rw_buffer_t *scratch, const coap_packet_t *inpkt, coap_packet_t *outpkt, uint8_t id_hi, uint8_t id_lo)
+static int handle_get_light(coap_rw_buffer_t *scratch, const coap_packet_t *inpkt, coap_packet_t *outpkt, uint16_t id)
 {
-    return coap_make_response(scratch, outpkt, (const uint8_t *)&light, 1, id_hi, id_lo, &inpkt->tok, COAP_RSPCODE_CONTENT, COAP_CONTENTTYPE_TEXT_PLAIN);
+    return coap_make_response(scratch, outpkt, (const uint8_t *)&light, 1, id, &inpkt->tok, COAP_RSPCODE_CONTENT, COAP_CONTENTTYPE_TEXT_PLAIN);
 }
 
-static int handle_put_light(coap_rw_buffer_t *scratch, const coap_packet_t *inpkt, coap_packet_t *outpkt, uint8_t id_hi, uint8_t id_lo)
+static int handle_put_light(coap_rw_buffer_t *scratch, const coap_packet_t *inpkt, coap_packet_t *outpkt, uint16_t id)
 {
     if (inpkt->payload.len == 0)
-        return coap_make_response(scratch, outpkt, NULL, 0, id_hi, id_lo, &inpkt->tok, COAP_RSPCODE_BAD_REQUEST, COAP_CONTENTTYPE_TEXT_PLAIN);
+        return coap_make_response(scratch, outpkt, NULL, 0, id, &inpkt->tok, COAP_RSPCODE_BAD_REQUEST, COAP_CONTENTTYPE_TEXT_PLAIN);
     if (inpkt->payload.p[0] == '1')
     {
         light = '1';
@@ -48,7 +48,7 @@ static int handle_put_light(coap_rw_buffer_t *scratch, const coap_packet_t *inpk
 #else
         printf("ON\n");
 #endif
-        return coap_make_response(scratch, outpkt, (const uint8_t *)&light, 1, id_hi, id_lo, &inpkt->tok, COAP_RSPCODE_CHANGED, COAP_CONTENTTYPE_TEXT_PLAIN);
+        return coap_make_response(scratch, outpkt, (const uint8_t *)&light, 1, id, &inpkt->tok, COAP_RSPCODE_CHANGED, COAP_CONTENTTYPE_TEXT_PLAIN);
     }
     else
     {
@@ -58,7 +58,7 @@ static int handle_put_light(coap_rw_buffer_t *scratch, const coap_packet_t *inpk
 #else
         printf("OFF\n");
 #endif
-        return coap_make_response(scratch, outpkt, (const uint8_t *)&light, 1, id_hi, id_lo, &inpkt->tok, COAP_RSPCODE_CHANGED, COAP_CONTENTTYPE_TEXT_PLAIN);
+        return coap_make_response(scratch, outpkt, (const uint8_t *)&light, 1, id, &inpkt->tok, COAP_RSPCODE_CHANGED, COAP_CONTENTTYPE_TEXT_PLAIN);
     }
 }
 
@@ -110,4 +110,3 @@ void build_rsp(void)
         ep++;
     }
 }
-

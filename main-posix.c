@@ -8,6 +8,8 @@
 
 #define PORT 5683
 
+extern coap_endpoint_t endpoints[];
+
 int main(int argc, char **argv)
 {
     int fd;
@@ -47,7 +49,7 @@ int main(int argc, char **argv)
         coap_packet_t pkt;
 
         n = recvfrom(fd, buf, sizeof(buf), 0, (struct sockaddr *)&cliaddr, &len);
-#ifdef DEBUG
+#ifdef MICROCOAP_DEBUG
         printf("Received: ");
         coap_dump(buf, n, true);
         printf("\n");
@@ -59,21 +61,21 @@ int main(int argc, char **argv)
         {
             size_t rsplen = sizeof(buf);
             coap_packet_t rsppkt;
-#ifdef DEBUG
+#ifdef MICROCOAP_DEBUG
             coap_dumpPacket(&pkt);
 #endif
-            coap_handle_req(&scratch_buf, &pkt, &rsppkt);
+            coap_handle_req(endpoints, &scratch_buf, &pkt, &rsppkt);
 
             if (0 != (rc = coap_build(buf, &rsplen, &rsppkt)))
                 printf("coap_build failed rc=%d\n", rc);
             else
             {
-#ifdef DEBUG
+#ifdef MICROCOAP_DEBUG
                 printf("Sending: ");
                 coap_dump(buf, rsplen, true);
                 printf("\n");
 #endif
-#ifdef DEBUG
+#ifdef MICROCOAP_DEBUG
                 coap_dumpPacket(&rsppkt);
 #endif
 
@@ -82,4 +84,3 @@ int main(int argc, char **argv)
         }
     }
 }
-

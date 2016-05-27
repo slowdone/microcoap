@@ -1,4 +1,4 @@
-CFLAGS += -Wall -DDEBUG
+CFLAGS += -Wall -DMICROCOAP_DEBUG
 # -DIPV6
 SRC = $(wildcard *.c)
 OBJ = $(SRC:%.c=%.o)

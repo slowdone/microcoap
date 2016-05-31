@@ -202,9 +202,11 @@ int coap_make_response(coap_rw_buffer_t *scratch, coap_packet_t *pkt,
                        uint16_t msgid, const coap_buffer_t* tok,
                        coap_responsecode_t rspcode,
                        coap_content_type_t content_type);
-int coap_handle_req(const coap_endpoint_t *endpoints, coap_rw_buffer_t *scratch,
-                    const coap_packet_t *inpkt, coap_packet_t *outpkt);
-int coap_build_endpoints(const coap_endpoint_t *endpoints, char *buf, size_t buflen);
+int coap_handle_request(const coap_endpoint_t *endpoints,
+                        coap_rw_buffer_t *scratch,
+                        const coap_packet_t *inpkt, coap_packet_t *outpkt);
+int coap_build_endpoints(const coap_endpoint_t *endpoints,
+                         char *buf, size_t buflen);
 void endpoint_setup(const coap_endpoint_t *endpoints);
 
 #ifdef __cplusplus

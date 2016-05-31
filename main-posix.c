@@ -65,7 +65,7 @@ int main(int argc, char **argv)
 #ifdef MICROCOAP_DEBUG
             coap_dump_packet(&pkt);
 #endif
-            coap_handle_req(endpoints, &scratch_buf, &pkt, &rsppkt);
+            coap_handle_request(endpoints, &scratch_buf, &pkt, &rsppkt);
 
             if (0 != (rc = coap_build(buf, &rsplen, &rsppkt)))
                 printf("coap_build failed rc=%d\n", rc);

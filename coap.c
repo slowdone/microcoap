@@ -394,8 +394,9 @@ int coap_make_response(coap_rw_buffer_t *scratch, coap_packet_t *pkt,
 
 // FIXME, if this looked in the table at the path before the method then
 // it could more easily return 405 errors
-int coap_handle_req(const coap_endpoint_t *endpoints, coap_rw_buffer_t *scratch,
-                    const coap_packet_t *inpkt, coap_packet_t *outpkt)
+int coap_handle_request(const coap_endpoint_t *endpoints,
+                        coap_rw_buffer_t *scratch,
+                        const coap_packet_t *inpkt, coap_packet_t *outpkt)
 {
     const coap_option_t *opt = NULL;
     uint8_t count;

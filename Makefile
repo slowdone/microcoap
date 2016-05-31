@@ -1,6 +1,7 @@
-CFLAGS += -Wall -DMICROCOAP_DEBUG
+CFLAGS += -Wall -Wextra -O2 -g -DMICROCOAP_DEBUG -I.
 # -DIPV6
-SRC = $(wildcard *.c)
+DIRS = example
+SRC = coap.c example/endpoints.c example/main.c
 OBJ = $(SRC:%.c=%.o)
 DEPS = $(SRC:%.c=%.d)
 EXEC = coap

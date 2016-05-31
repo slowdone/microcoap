@@ -11,7 +11,7 @@
 extern void endpoint_setup(const coap_endpoint_t *endpoints);
 extern const coap_endpoint_t endpoints[];
 
-int main(int argc, char **argv)
+int main(void)
 {
     int fd;
 #ifdef IPV6

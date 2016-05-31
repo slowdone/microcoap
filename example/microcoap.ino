@@ -22,7 +22,7 @@ void setup()
 {
     int i;
     Serial.begin(9600);
-    while (!Serial) 
+    while (!Serial)
     {
         ; // wait for serial port to connect. Needed for Leonardo only
     }
@@ -37,12 +37,11 @@ void setup()
     for (i=0;i<4;i++)
     {
         Serial.print(Ethernet.localIP()[i], DEC);
-        Serial.print("."); 
+        Serial.print(".");
     }
     Serial.println();
     udp.begin(PORT);
 
-    coap_setup();
     endpoint_setup();
 }
 
@@ -60,7 +59,7 @@ void loop()
     int rc;
     coap_packet_t pkt;
     int i;
-    
+
     if ((sz = udp.parsePacket()) > 0)
     {
         udp.read(packetbuf, sizeof(packetbuf));
@@ -81,7 +80,7 @@ void loop()
         {
             size_t rsplen = sizeof(packetbuf);
             coap_packet_t rsppkt;
-            coap_handle_req(&scratch_buf, &pkt, &rsppkt);
+            coap_handle_request(&scratch_buf, &pkt, &rsppkt);
 
             memset(packetbuf, 0, UDP_TX_PACKET_MAX_SIZE);
             if (0 != (rc = coap_build(packetbuf, &rsplen, &rsppkt)))
@@ -96,4 +95,3 @@ void loop()
         }
     }
 }
-

@@ -449,7 +449,7 @@ int coap_build_endpoints(const coap_endpoint_t *endpoints, char *buf, size_t buf
         strncat(buf, "<", len);
         len--;
 
-        for (size_t i = 0; i < ep->path->count; i++) {
+        for (int i = 0; i < ep->path->count; i++) {
             strncat(buf, "/", len);
             len--;
 

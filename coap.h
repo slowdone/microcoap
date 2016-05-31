@@ -207,7 +207,6 @@ int coap_handle_request(const coap_endpoint_t *endpoints,
                         const coap_packet_t *inpkt, coap_packet_t *outpkt);
 int coap_build_endpoints(const coap_endpoint_t *endpoints,
                          char *buf, size_t buflen);
-void endpoint_setup(const coap_endpoint_t *endpoints);
 
 #ifdef __cplusplus
 }

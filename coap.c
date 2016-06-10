@@ -288,10 +288,7 @@ int coap_parse(coap_packet_t *pkt, const uint8_t *buf, size_t buflen)
 
 int coap_build(uint8_t *buf, size_t *buflen, const coap_packet_t *pkt)
 {
-    size_t opts_len = 0;
-    uint8_t *p;
-    uint16_t running_delta = 0;
-    /* build header */
+    // build header
     if (*buflen < (sizeof(coap_raw_header_t) + pkt->hdr.tkl)) {
         return COAP_ERR_BUFFER_TOO_SMALL;
     }
@@ -301,8 +298,8 @@ int coap_build(uint8_t *buf, size_t *buflen, const coap_packet_t *pkt)
     r->hdr.tkl = pkt->hdr.tkl;
     r->hdr.code = pkt->hdr.code;
     r->hdr.id = pkt->hdr.id;
-    /* inject token */
-    p = buf + sizeof(coap_raw_header_t);
+    // inject token
+    uint8_t *p = buf + sizeof(coap_raw_header_t);
     if ((pkt->hdr.tkl > 0) && (pkt->hdr.tkl != pkt->tok.len)) {
         return COAP_ERR_UNSUPPORTED;
     }
@@ -310,17 +307,16 @@ int coap_build(uint8_t *buf, size_t *buflen, const coap_packet_t *pkt)
         memcpy(p, pkt->tok.p, pkt->hdr.tkl);
     }
     p += pkt->hdr.tkl;
-    /* inject options, http://tools.ietf.org/html/rfc7252#section-3.1 */
+    // inject options, http://tools.ietf.org/html/rfc7252#section-3.1
+    uint16_t running_delta = 0;
     for (size_t i = 0; i < pkt->numopts; ++i) {
-        uint8_t delta = 0;
-        uint8_t len = 0;
-        uint32_t optDelta;
-
         if (((size_t)(p - buf)) > *buflen) {
             return COAP_ERR_BUFFER_TOO_SMALL;
         }
-        optDelta = pkt->opts[i].num - running_delta;
+        uint32_t optDelta = pkt->opts[i].num - running_delta;
+        uint8_t delta = 0;
         _option_nibble(optDelta, &delta);
+        uint8_t len = 0;
         _option_nibble((uint32_t)pkt->opts[i].buf.len, &len);
 
         *p++ = (0xFF & (delta << 4 | len));
@@ -343,8 +339,8 @@ int coap_build(uint8_t *buf, size_t *buflen, const coap_packet_t *pkt)
         p += pkt->opts[i].buf.len;
         running_delta = pkt->opts[i].num;
     }
-    /* calc number of bytes used by options */
-    opts_len = (p - buf) - sizeof(coap_raw_header_t);
+    // calc number of bytes used by options
+    size_t opts_len = (p - buf) - sizeof(coap_raw_header_t);
     if (pkt->payload.len > 0) {
         if (*buflen < sizeof(coap_raw_header_t) + 1 + pkt->payload.len + opts_len) {
             return COAP_ERR_BUFFER_TOO_SMALL;
@@ -372,13 +368,11 @@ int coap_make_response(coap_rw_buffer_t *scratch, coap_packet_t *pkt,
     pkt->hdr.code = rspcode;
     pkt->hdr.id = msgid;
     pkt->numopts = 1;
-
     // need token in response
     if (tok) {
         pkt->hdr.tkl = tok->len;
         pkt->tok = *tok;
     }
-
     // safe because 1 < MAXOPT
     pkt->opts[0].num = COAP_OPTION_CONTENT_FORMAT;
     pkt->opts[0].buf.p = scratch->p;
@@ -393,63 +387,56 @@ int coap_make_response(coap_rw_buffer_t *scratch, coap_packet_t *pkt,
     return 0;
 }
 
-// FIXME, if this looked in the table at the path before the method then
-// it could more easily return 405 errors
 int coap_handle_request(const coap_endpoint_t *endpoints,
                         coap_rw_buffer_t *scratch,
                         const coap_packet_t *inpkt, coap_packet_t *outpkt)
 {
-    const coap_option_t *opt = NULL;
     uint8_t count;
-    int i;
-    const coap_endpoint_t *ep = endpoints;
-    while (ep->handler) {
-        if((ep->method == inpkt->hdr.code) &&
-           (opt = _find_options(inpkt, COAP_OPTION_URI_PATH, &count))) {
-            if (count == ep->path->count) {
-                for (i = 0; i < count; i++) {
-                    if (opt[i].buf.len != strlen(ep->path->elems[i])) {
-                        break;
-                    }
-                    if (memcmp(ep->path->elems[i], opt[i].buf.p, opt[i].buf.len)) {
-                        break;
-                    }
+    const coap_option_t *opt = _find_options(inpkt, COAP_OPTION_URI_PATH, &count);
+    // find handler for requested endpoint
+    for (const coap_endpoint_t *ep = endpoints; ep->handler && opt; ++ep) {
+        if ((ep->method == inpkt->hdr.code) && (count == ep->path->count)){
+            int i;
+            for (i = 0; i < count; i++) {
+                if (opt[i].buf.len != strlen(ep->path->elems[i])) {
+                    break;
                 }
-                if (i == count) {
-                    return ep->handler(scratch, inpkt, outpkt, inpkt->hdr.id);
+                if (memcmp(ep->path->elems[i], opt[i].buf.p, opt[i].buf.len)) {
+                    break;
                 }
             }
+            if (i == count) {
+                return ep->handler(scratch, inpkt, outpkt, inpkt->hdr.id);
+            }
         }
-        ep++;
     }
-
     coap_make_response(scratch, outpkt, NULL, 0, inpkt->hdr.id, &inpkt->tok,
                        COAP_RSPCODE_NOT_FOUND, COAP_CONTENTTYPE_NONE);
-
     return 0;
 }
 
 int coap_build_endpoints(const coap_endpoint_t *endpoints, char *buf, size_t buflen)
 {
-    if (buflen < 4) { /* <>; */
+    if (buflen < 4) { // <>;
         return COAP_ERR_BUFFER_TOO_SMALL;
     }
     size_t len = buflen-1;
-
+    // loop over endpoints
     for (const coap_endpoint_t *ep = endpoints; ep->handler; ++ep) {
+        // skip if missing content type
         if (NULL == ep->core_attr) {
             ep++;
             continue;
         }
-
+        // comma separated list
         if (0 < strlen(buf)) {
             strncat(buf, ",", len);
             len--;
         }
-
+        // insert < at path beginning
         strncat(buf, "<", len);
         len--;
-
+        // insert path by elements
         for (int i = 0; i < ep->path->count; i++) {
             strncat(buf, "/", len);
             len--;
@@ -457,10 +444,10 @@ int coap_build_endpoints(const coap_endpoint_t *endpoints, char *buf, size_t buf
             strncat(buf, ep->path->elems[i], len);
             len -= strlen(ep->path->elems[i]);
         }
-
+        // insert >; after path
         strncat(buf, ">;", len);
         len -= 2;
-
+        // append content type
         strncat(buf, ep->core_attr, len);
         len -= strlen(ep->core_attr);
     }

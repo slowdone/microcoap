@@ -178,16 +178,12 @@ typedef struct coap_endpoint_path
 
 typedef struct coap_endpoint
 {
-    coap_method_t method;               /* (i.e. POST, PUT or GET) */
+    coap_method_t method;               // POST, PUT or GET
     coap_endpoint_func handler;         /* callback function which handles this
                                          * type of endpoint (and calls
                                          * coap_make_response() at some point) */
-    const coap_endpoint_path_t *path;   /* path towards a resource (i.e. foo/bar/) */
-    const char *core_attr;              /* the 'ct' attribute, as defined in RFC7252, section 7.2.1.:
-                                         * "The Content-Format code "ct" attribute
-                                         * provides a hint about the
-                                         * Content-Formats this resource returns."
-                                         * (Section 12.3. lists possible ct values.) */
+    const coap_endpoint_path_t *path;   // resource path, e.g. foo/bar/
+    coap_content_type_t ct;             // content type in payload
 } coap_endpoint_t;
 
 
@@ -197,6 +193,10 @@ void coap_dump_packet(const coap_packet_t *pkt);
 
 int coap_parse(coap_packet_t *pkt, const uint8_t *buf, size_t buflen);
 int coap_build(uint8_t *buf, size_t *buflen, const coap_packet_t *pkt);
+int coap_make_request(coap_rw_buffer_t *scratch, coap_packet_t *pkt,
+                      const uint8_t *content, size_t content_len,
+                      coap_content_type_t content_type, coap_method_t method,
+                      const coap_endpoint_path_t *path);
 int coap_make_response(coap_rw_buffer_t *scratch, coap_packet_t *pkt,
                        const uint8_t *content, size_t content_len,
                        uint16_t msgid, const coap_buffer_t* tok,
@@ -205,6 +205,8 @@ int coap_make_response(coap_rw_buffer_t *scratch, coap_packet_t *pkt,
 int coap_handle_request(const coap_endpoint_t *endpoints,
                         coap_rw_buffer_t *scratch,
                         const coap_packet_t *inpkt, coap_packet_t *outpkt);
+int coap_handle_response();
+int coap_handle_packet();
 int coap_build_endpoints(const coap_endpoint_t *endpoints,
                          char *buf, size_t buflen);
 

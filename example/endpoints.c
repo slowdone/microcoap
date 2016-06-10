@@ -20,6 +20,7 @@ void endpoint_setup(const coap_endpoint_t *endpoints)
 void endpoint_setup(const coap_endpoint_t *endpoints)
 {
     coap_build_endpoints(endpoints, rsp, rsplen);
+    printf("endpoints: %s\n", rsp);
 }
 #endif
 
@@ -66,8 +67,8 @@ static int handle_put_light(coap_rw_buffer_t *scratch, const coap_packet_t *inpk
 
 const coap_endpoint_t endpoints[] =
 {
-    {COAP_METHOD_GET, handle_get_well_known_core, &path_well_known_core, "ct=40"},
-    {COAP_METHOD_GET, handle_get_light, &path_light, "ct=0"},
-    {COAP_METHOD_PUT, handle_put_light, &path_light, NULL},
-    {(coap_method_t)0, NULL, NULL, NULL}
+    {COAP_METHOD_GET, handle_get_well_known_core, &path_well_known_core, COAP_CONTENTTYPE_APPLICATION_LINKFORMAT},
+    {COAP_METHOD_GET, handle_get_light, &path_light, COAP_CONTENTTYPE_TEXT_PLAIN},
+    {COAP_METHOD_PUT, handle_put_light, &path_light, COAP_CONTENTTYPE_NONE},
+    {(coap_method_t)0, NULL, NULL, COAP_CONTENTTYPE_NONE}
 };

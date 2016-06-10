@@ -419,12 +419,15 @@ int coap_build_endpoints(const coap_endpoint_t *endpoints, char *buf, size_t buf
     if (buflen < 4) { // <>;
         return COAP_ERR_BUFFER_TOO_SMALL;
     }
-    size_t len = buflen-1;
+    memset(buf,0,buflen);
     // loop over endpoints
+    int len = buflen - 1;
     for (const coap_endpoint_t *ep = endpoints; ep->handler; ++ep) {
+        if (0 > len) {
+            return COAP_ERR_BUFFER_TOO_SMALL;
+        }
         // skip if missing content type
-        if (NULL == ep->core_attr) {
-            ep++;
+        if (ep->ct == COAP_CONTENTTYPE_NONE) {
             continue;
         }
         // comma separated list
@@ -447,8 +450,7 @@ int coap_build_endpoints(const coap_endpoint_t *endpoints, char *buf, size_t buf
         strncat(buf, ">;", len);
         len -= 2;
         // append content type
-        strncat(buf, ep->core_attr, len);
-        len -= strlen(ep->core_attr);
+        len -= sprintf(buf + (buflen - len - 1), "ct=%d", (int)ep->ct);
     }
-    return strlen(buf);
+    return COAP_SUCCESS;
 }

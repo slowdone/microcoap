@@ -164,7 +164,7 @@ typedef enum
     COAP_ERR_OPTION_DELTA_INVALID = 11,
     COAP_ERR_OPTION_NOT_FOUND = 12,
 } coap_error_t;
-
+#define COAP_SUCCESS COAP_ERR_NONE
 ///////////////////////
 
 typedef int (*coap_endpoint_func)(coap_rw_buffer_t *scratch, const coap_packet_t *inpkt, coap_packet_t *outpkt, uint16_t id);

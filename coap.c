@@ -71,7 +71,7 @@ static int _parse_header(coap_header_t *hdr,
     if (hdr->ver != 1) {
         return COAP_ERR_VERSION_NOT_1;
     }
-    return COAP_ERR_NONE;
+    return COAP_SUCCESS;
 }
 
 static int _parse_token(coap_packet_t *pkt,
@@ -90,7 +90,7 @@ static int _parse_token(coap_packet_t *pkt,
     else {
         tok->p = buf + sizeof(coap_raw_header_t);
     }
-    return COAP_ERR_NONE;
+    return COAP_SUCCESS;
 }
 
 static int _parse_option(coap_option_t *option, uint16_t *running_delta,
@@ -157,7 +157,7 @@ static int _parse_option(coap_option_t *option, uint16_t *running_delta,
     *buf = p + 1 + len;
     *running_delta += delta;
 
-    return 0;
+    return COAP_SUCCESS;
 }
 
 // http://tools.ietf.org/html/rfc7252#section-3.1
@@ -191,8 +191,7 @@ static int _parse_options_payload(coap_packet_t *pkt,
         pkt->payload.p = NULL;
         pkt->payload.len = 0;
     }
-
-    return COAP_ERR_NONE;
+    return COAP_SUCCESS;
 }
 
 /*
@@ -283,7 +282,7 @@ int coap_parse(coap_packet_t *pkt, const uint8_t *buf, size_t buflen)
     if(rc) {
         return rc;
     }
-    return COAP_ERR_NONE;
+    return COAP_SUCCESS;
 }
 
 int coap_build(uint8_t *buf, size_t *buflen, const coap_packet_t *pkt)
@@ -353,7 +352,7 @@ int coap_build(uint8_t *buf, size_t *buflen, const coap_packet_t *pkt)
     else {
         *buflen = opts_len + sizeof(coap_raw_header_t);
     }
-    return 0;
+    return COAP_SUCCESS;
 }
 
 int coap_make_response(coap_rw_buffer_t *scratch, coap_packet_t *pkt,
@@ -384,7 +383,7 @@ int coap_make_response(coap_rw_buffer_t *scratch, coap_packet_t *pkt,
     pkt->opts[0].buf.len = 2;
     pkt->payload.p = content;
     pkt->payload.len = content_len;
-    return 0;
+    return COAP_SUCCESS;
 }
 
 int coap_handle_request(const coap_endpoint_t *endpoints,
@@ -412,7 +411,7 @@ int coap_handle_request(const coap_endpoint_t *endpoints,
     }
     coap_make_response(scratch, outpkt, NULL, 0, inpkt->hdr.id, &inpkt->tok,
                        COAP_RSPCODE_NOT_FOUND, COAP_CONTENTTYPE_NONE);
-    return 0;
+    return COAP_SUCCESS;
 }
 
 int coap_build_endpoints(const coap_endpoint_t *endpoints, char *buf, size_t buflen)

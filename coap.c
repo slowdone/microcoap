@@ -238,6 +238,8 @@ static void _option_nibble(uint32_t value, uint8_t *nibble)
     }
 }
 
+
+/* PUBLIC */
 #ifdef MICROCOAP_DEBUG
 void coap_dump(const uint8_t *buf, size_t buflen, bool bare)
 {

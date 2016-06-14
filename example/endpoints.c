@@ -4,8 +4,8 @@
 
 static char light = '0';
 
-const uint16_t rsplen = 1500;
-static char rsp[1500] = "";
+const uint16_t rsplen = 128;
+static char rsp[128] = "";
 
 #ifdef ARDUINO
 #include "Arduino.h"

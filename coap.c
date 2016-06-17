@@ -18,18 +18,18 @@ typedef union {
     } hdr;
 } coap_raw_header_t;
 
-static int _parse_token(coap_packet_t *pkt,
-                            const uint8_t *buf, const size_t buflen);
-static int _parse_header(coap_header_t *hdr,
-                             const uint8_t *buf, const size_t buflen);
-static int _parse_options_payload(coap_packet_t *pkt,
-                                      const uint8_t *buf, size_t buflen);
-static int _parse_option(coap_option_t *option, uint16_t *running_delta,
-                             const uint8_t **buf, size_t buflen);
+static int _parse_token(const uint8_t *buf, const size_t buflen,
+                        coap_packet_t *pkt);
+static int _parse_header(const uint8_t *buf, const size_t buflen,
+                         coap_header_t *hdr);
+static int _parse_options_payload(const uint8_t *buf, const size_t buflen,
+                                  coap_packet_t *pkt);
+static int _parse_option(const uint8_t **buf, const size_t buflen,
+                         coap_option_t *option, uint16_t *running_delta);
 static const coap_option_t *_find_options(const coap_packet_t *pkt,
-                                              coap_option_num_t num,
-                                              uint8_t *count);
-static void _option_nibble(uint32_t value, uint8_t *nibble);
+                                          const coap_option_num_t num,
+                                          uint8_t *count);
+static void _option_nibble(const uint32_t value, uint8_t *nibble);
 static void _dump_header(const coap_header_t *hdr);
 static void _dump_options(const coap_option_t *opts, const size_t numopt);
 
@@ -55,8 +55,8 @@ static void _dump_options(const coap_option_t *opts, const size_t numopt)
 }
 #endif /* MICROCOAP_DEBUG */
 
-static int _parse_header(coap_header_t *hdr,
-                             const uint8_t *buf, const size_t buflen)
+static int _parse_header(const uint8_t *buf, const size_t buflen,
+                         coap_header_t *hdr)
 {
     if (buflen < sizeof(coap_raw_header_t)) {
         return COAP_ERR_HEADER_TOO_SHORT;
@@ -74,8 +74,8 @@ static int _parse_header(coap_header_t *hdr,
     return COAP_SUCCESS;
 }
 
-static int _parse_token(coap_packet_t *pkt,
-                            const uint8_t *buf, const size_t buflen)
+static int _parse_token(const uint8_t *buf, const size_t buflen,
+                        coap_packet_t *pkt)
 {
     coap_buffer_t *tok = &pkt->tok;
     int toklen = pkt->hdr.tkl;
@@ -93,8 +93,8 @@ static int _parse_token(coap_packet_t *pkt,
     return COAP_SUCCESS;
 }
 
-static int _parse_option(coap_option_t *option, uint16_t *running_delta,
-                             const uint8_t **buf, size_t buflen)
+static int _parse_option(const uint8_t **buf, const size_t buflen,
+                         coap_option_t *option, uint16_t *running_delta)
 {
     const uint8_t *p = *buf;
     uint8_t headlen = 1;
@@ -161,8 +161,8 @@ static int _parse_option(coap_option_t *option, uint16_t *running_delta,
 }
 
 // http://tools.ietf.org/html/rfc7252#section-3.1
-static int _parse_options_payload(coap_packet_t *pkt,
-                                      const uint8_t *buf, size_t buflen)
+static int _parse_options_payload(const uint8_t *buf, const size_t buflen,
+                                  coap_packet_t *pkt)
 {
     size_t optionIndex = 0;
     uint16_t delta = 0;
@@ -175,7 +175,7 @@ static int _parse_options_payload(coap_packet_t *pkt,
 
     /* Note: 0xFF is payload marker */
     while ((optionIndex < MAXOPT) && (p < end) && (*p != 0xFF)) {
-        rc = _parse_option(&pkt->opts[optionIndex], &delta, &p, end - p);
+        rc = _parse_option(&p, end - p, &pkt->opts[optionIndex], &delta);
         if(rc) {
             return rc;
         }
@@ -199,8 +199,8 @@ static int _parse_options_payload(coap_packet_t *pkt,
  * so can return a block with same option num
  */
 static const coap_option_t *_find_options(const coap_packet_t *pkt,
-                                              coap_option_num_t num,
-                                              uint8_t *count)
+                                          const coap_option_num_t num,
+                                          uint8_t *count)
 {
     const coap_option_t * first = NULL;
     /* loop through packet opts */
@@ -225,7 +225,7 @@ static const coap_option_t *_find_options(const coap_packet_t *pkt,
 }
 
 /* https://tools.ietf.org/html/rfc7252#section-3.1 */
-static void _option_nibble(uint32_t value, uint8_t *nibble)
+static void _option_nibble(const uint32_t value, uint8_t *nibble)
 {
     if (value < 13) {
         *nibble = (0xFF & value);
@@ -271,16 +271,16 @@ int coap_parse(coap_packet_t *pkt, const uint8_t *buf, size_t buflen)
 {
     int rc;
     /* parse header, token, options, and payload */
-    rc = _parse_header(&pkt->hdr, buf, buflen);
+    rc = _parse_header(buf, buflen, &pkt->hdr);
     if(rc) {
         return rc;
     }
-    rc = _parse_token(pkt, buf, buflen);
+    rc = _parse_token(buf, buflen, pkt);
     if(rc) {
         return rc;
     }
     pkt->numopts = MAXOPT;
-    rc = _parse_options_payload(pkt, buf, buflen);
+    rc = _parse_options_payload(buf, buflen, pkt);
     if(rc) {
         return rc;
     }
@@ -389,8 +389,9 @@ int coap_make_response(coap_rw_buffer_t *scratch, coap_packet_t *pkt,
 }
 
 int coap_handle_request(const coap_endpoint_t *endpoints,
-                        coap_rw_buffer_t *scratch,
-                        const coap_packet_t *inpkt, coap_packet_t *outpkt)
+                        const coap_packet_t *inpkt,
+                        coap_packet_t *outpkt,
+                        coap_rw_buffer_t *scratch)
 {
     uint8_t count;
     const coap_option_t *opt = _find_options(inpkt, COAP_OPTION_URI_PATH, &count);

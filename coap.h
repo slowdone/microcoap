@@ -167,9 +167,9 @@ typedef enum
 #define COAP_SUCCESS COAP_ERR_NONE
 ///////////////////////
 
-typedef int (*coap_endpoint_func)(coap_rw_buffer_t *scratch, const coap_packet_t *inpkt, coap_packet_t *outpkt, uint16_t id);
-#define MAX_SEGMENTS 2  // 2 = /foo/bar, 3 = /foo/bar/baz
+typedef int (*coap_endpoint_func)(const coap_packet_t *inpkt, coap_packet_t *outpkt, coap_rw_buffer_t *scratch);
 
+#define MAX_SEGMENTS 2  // 2 = /foo/bar, 3 = /foo/bar/baz
 typedef struct coap_endpoint_path
 {
     int count;
@@ -191,17 +191,17 @@ typedef struct coap_endpoint
 void coap_dump(const uint8_t *buf, size_t buflen, bool bare);
 void coap_dump_packet(const coap_packet_t *pkt);
 
-int coap_parse(coap_packet_t *pkt, const uint8_t *buf, size_t buflen);
-int coap_build(uint8_t *buf, size_t *buflen, const coap_packet_t *pkt);
+int coap_parse(const uint8_t *buf, const size_t buflen, coap_packet_t *pkt);
+int coap_build(const coap_packet_t *pkt, uint8_t *buf, size_t *buflen);
 int coap_make_request(coap_rw_buffer_t *scratch, coap_packet_t *pkt,
                       const uint8_t *content, size_t content_len,
                       coap_content_type_t content_type, coap_method_t method,
                       const coap_endpoint_path_t *path);
-int coap_make_response(coap_rw_buffer_t *scratch, coap_packet_t *pkt,
-                       const uint8_t *content, size_t content_len,
-                       uint16_t msgid, const coap_buffer_t* tok,
-                       coap_responsecode_t rspcode,
-                       coap_content_type_t content_type);
+int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,
+                       const coap_responsecode_t rspcode,
+                       const uint8_t *content, const size_t content_len,
+                       const coap_content_type_t content_type,
+                       coap_packet_t *outpkt, coap_rw_buffer_t *scratch);
 int coap_handle_request(const coap_endpoint_t *endpoints,
                         const coap_packet_t *inpkt,
                         coap_packet_t *outpkt,

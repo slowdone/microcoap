@@ -267,7 +267,7 @@ void coap_dump_packet(const coap_packet_t *pkt)
 }
 #endif /* MICROCOAP_DEBUG */
 
-int coap_parse(coap_packet_t *pkt, const uint8_t *buf, size_t buflen)
+int coap_parse(const uint8_t *buf, const size_t buflen, coap_packet_t *pkt)
 {
     int rc;
     /* parse header, token, options, and payload */
@@ -287,7 +287,7 @@ int coap_parse(coap_packet_t *pkt, const uint8_t *buf, size_t buflen)
     return COAP_SUCCESS;
 }
 
-int coap_build(uint8_t *buf, size_t *buflen, const coap_packet_t *pkt)
+int coap_build(const coap_packet_t *pkt, uint8_t *buf, size_t *buflen)
 {
     // build header
     if (*buflen < (sizeof(coap_raw_header_t) + pkt->hdr.tkl)) {
@@ -357,34 +357,34 @@ int coap_build(uint8_t *buf, size_t *buflen, const coap_packet_t *pkt)
     return COAP_SUCCESS;
 }
 
-int coap_make_response(coap_rw_buffer_t *scratch, coap_packet_t *pkt,
-                       const uint8_t *content, size_t content_len,
-                       uint16_t msgid, const coap_buffer_t* tok,
-                       coap_responsecode_t rspcode,
-                       coap_content_type_t content_type)
+int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,
+                       const coap_responsecode_t rspcode,
+                       const uint8_t *content, const size_t content_len,
+                       const coap_content_type_t content_type,
+                       coap_packet_t *outpkt, coap_rw_buffer_t *scratch)
 {
-    pkt->hdr.ver = 0x01;
-    pkt->hdr.t = COAP_TYPE_ACK;
-    pkt->hdr.tkl = 0;
-    pkt->hdr.code = rspcode;
-    pkt->hdr.id = msgid;
-    pkt->numopts = 1;
+    outpkt->hdr.ver = 0x01;
+    outpkt->hdr.t = COAP_TYPE_ACK;
+    outpkt->hdr.tkl = 0;
+    outpkt->hdr.code = rspcode;
+    outpkt->hdr.id = msgid;
+    outpkt->numopts = 1;
     // need token in response
     if (tok) {
-        pkt->hdr.tkl = tok->len;
-        pkt->tok = *tok;
+        outpkt->hdr.tkl = tok->len;
+        outpkt->tok = *tok;
     }
     // safe because 1 < MAXOPT
-    pkt->opts[0].num = COAP_OPTION_CONTENT_FORMAT;
-    pkt->opts[0].buf.p = scratch->p;
+    outpkt->opts[0].num = COAP_OPTION_CONTENT_FORMAT;
+    outpkt->opts[0].buf.p = scratch->p;
     if (scratch->len < 2) {
         return COAP_ERR_BUFFER_TOO_SMALL;
     }
     scratch->p[0] = ((uint16_t)content_type & 0xFF00) >> 8;
     scratch->p[1] = ((uint16_t)content_type & 0x00FF);
-    pkt->opts[0].buf.len = 2;
-    pkt->payload.p = content;
-    pkt->payload.len = content_len;
+    outpkt->opts[0].buf.len = 2;
+    outpkt->payload.p = content;
+    outpkt->payload.len = content_len;
     return COAP_SUCCESS;
 }
 
@@ -408,12 +408,12 @@ int coap_handle_request(const coap_endpoint_t *endpoints,
                 }
             }
             if (i == count) {
-                return ep->handler(scratch, inpkt, outpkt, inpkt->hdr.id);
+                return ep->handler(inpkt, outpkt, scratch);
             }
         }
     }
-    coap_make_response(scratch, outpkt, NULL, 0, inpkt->hdr.id, &inpkt->tok,
-                       COAP_RSPCODE_NOT_FOUND, COAP_CONTENTTYPE_NONE);
+    coap_make_response(inpkt->hdr.id, &inpkt->tok, COAP_RSPCODE_NOT_FOUND,
+                       NULL, 0, COAP_CONTENTTYPE_NONE, outpkt, scratch);
     return COAP_SUCCESS;
 }
 

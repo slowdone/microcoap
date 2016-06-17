@@ -56,7 +56,7 @@ int main(void)
         printf("\n");
 #endif
 
-        if (0 != (rc = coap_parse(&pkt, buf, n)))
+        if (0 != (rc = coap_parse(buf, n, &pkt)))
             printf("Bad packet rc=%d\n", rc);
         else
         {
@@ -67,7 +67,7 @@ int main(void)
 #endif
             coap_handle_request(endpoints, &pkt, &rsppkt, &scratch_buf);
 
-            if (0 != (rc = coap_build(buf, &rsplen, &rsppkt)))
+            if (0 != (rc = coap_build(&rsppkt, buf, &rsplen)))
                 printf("coap_build failed rc=%d\n", rc);
             else
             {

@@ -199,9 +199,6 @@ typedef struct coap_endpoint
 
 
 ///////////////////////
-void coap_dump(const uint8_t *buf, size_t buflen, bool bare);
-void coap_dump_packet(const coap_packet_t *pkt);
-
 int coap_parse(const uint8_t *buf, const size_t buflen, coap_packet_t *pkt);
 int coap_build(const coap_packet_t *pkt, uint8_t *buf, size_t *buflen);
 int coap_make_request(coap_rw_buffer_t *scratch, coap_packet_t *pkt,

@@ -12,8 +12,6 @@ static const coap_option_t *_find_options(const coap_packet_t *pkt,
                                           uint8_t *count);
 static void _option_nibble(const uint32_t value, uint8_t *nibble);
 
-
-
 /*
  * options are always stored consecutively,
  * so can return a block with same option num
@@ -58,10 +56,7 @@ static void _option_nibble(const uint32_t value, uint8_t *nibble)
     }
 }
 
-
 /* PUBLIC */
-
-
 int coap_build(const coap_packet_t *pkt, uint8_t *buf, size_t *buflen)
 {
     // build header

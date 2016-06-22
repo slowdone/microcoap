@@ -1,6 +1,10 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
 
 #include "coap.h"
 
+/* --- PRIVATE -------------------------------------------------------------- */
 static int _parse_token(const uint8_t *buf, const size_t buflen,
                         coap_packet_t *pkt);
 static int _parse_header(const uint8_t *buf, const size_t buflen,
@@ -149,6 +153,7 @@ static int _parse_options_payload(const uint8_t *buf, const size_t buflen,
     return COAP_SUCCESS;
 }
 
+/* --- PUBLIC --------------------------------------------------------------- */
 int coap_parse(const uint8_t *buf, const size_t buflen, coap_packet_t *pkt)
 {
     int rc;

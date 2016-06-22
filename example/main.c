@@ -5,6 +5,7 @@
 #include <strings.h>
 
 #include "coap.h"
+#include "coap_dump.h"
 
 #define PORT 5683
 

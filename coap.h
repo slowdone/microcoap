@@ -65,15 +65,18 @@ typedef struct coap_packet
 /////////////////////////////////////////
 
 /*
- * http://tools.ietf.org/html/rfc7252#section-12.2
- * https://tools.ietf.org/html/draft-ietf-core-block-20#section-6
+ * COAP    - https://tools.ietf.org/html/rfc7252#section-12.2
+ * Block   - https://tools.ietf.org/html/draft-ietf-core-block-20#section-6
+ * Observe - https://tools.ietf.org/html/rfc7641#page-9
  */
 typedef enum
 {
+    COAP_OPTION_RESERVED = 0,
     COAP_OPTION_IF_MATCH = 1,
     COAP_OPTION_URI_HOST = 3,
     COAP_OPTION_ETAG = 4,
     COAP_OPTION_IF_NONE_MATCH = 5,
+    // COAP Observe, https://tools.ietf.org/html/rfc7641#page-9
     COAP_OPTION_OBSERVE = 6,
     COAP_OPTION_URI_PORT = 7,
     COAP_OPTION_LOCATION_PATH = 8,
@@ -83,13 +86,16 @@ typedef enum
     COAP_OPTION_URI_QUERY = 15,
     COAP_OPTION_ACCEPT = 17,
     COAP_OPTION_LOCATION_QUERY = 20,
-    /* Block-wise transfers in CoAP, options */
+    /* Block-wise transfers in CoAP, options
+     * https://tools.ietf.org/html/draft-ietf-core-block-20#section-6
+     */
     COAP_OPTION_BLOCK2 = 23,
     COAP_OPTION_BLOCK1 = 27,
     COAP_OPTION_SIZE2 = 28,
     /* END Block-wise transfers in CoAP */
     COAP_OPTION_PROXY_URI = 35,
     COAP_OPTION_PROXY_SCHEME = 39
+    COAP_OPTION_SIZE1 = 60,
 } coap_option_num_t;
 
 //http://tools.ietf.org/html/rfc7252#section-12.1.1
@@ -110,9 +116,13 @@ typedef enum
     COAP_TYPE_RESET = 3
 } coap_msgtype_t;
 
-//http://tools.ietf.org/html/rfc7252#section-5.2
-//http://tools.ietf.org/html/rfc7252#section-12.1.2
-/* https://tools.ietf.org/html/draft-ietf-core-block-20#section-6 */
+/*
+ * @brief COAP response codes
+ * for further details see following (upcoming) standard documents
+ * https://tools.ietf.org/html/rfc7252#section-5.2
+ * https://tools.ietf.org/html/rfc7252#section-12.1.2
+ * https://tools.ietf.org/html/draft-ietf-core-block-20#section-6
+ */
 #define MAKE_RSPCODE(clas, det) ((clas << 5) | (det))
 typedef enum
 {
@@ -123,6 +133,7 @@ typedef enum
     COAP_RSPCODE_VALID = MAKE_RSPCODE(2, 3),
     COAP_RSPCODE_CHANGED = MAKE_RSPCODE(2, 4),
     COAP_RSPCODE_CONTENT = MAKE_RSPCODE(2, 5),
+    // https://tools.ietf.org/html/draft-ietf-core-block-20#section-6
     COAP_RSPCODE_CONTINUE = MAKE_RSPCODE(2, 31),
     /* Client Errors */
     COAP_RSPCODE_BAD_REQUEST = MAKE_RSPCODE(4, 0),
@@ -132,6 +143,7 @@ typedef enum
     COAP_RSPCODE_NOT_FOUND = MAKE_RSPCODE(4, 4),
     COAP_RSPCODE_METHOD_NOT_ALLOWED = MAKE_RSPCODE(4, 5),
     COAP_RSPCODE_NOT_ACCEPTABLE = MAKE_RSPCODE(4, 6),
+    // https://tools.ietf.org/html/draft-ietf-core-block-20#section-6
     COAP_RSPCODE_REQUEST_ENTITY_INCOMPLETE = MAKE_RSPCODE(4,8),
     COAP_RSPCODE_PRECONDITION_FAILED = MAKE_RSPCODE(4, 12),
     COAP_RSPCODE_REQUEST_ENTITY_TO_LARGE = MAKE_RSPCODE(4, 13),

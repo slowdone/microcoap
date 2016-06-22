@@ -6,7 +6,7 @@
 #include <stddef.h>
 #include "coap.h"
 
-/* private stuff */
+/* --- PRIVATE -------------------------------------------------------------- */
 static const coap_option_t *_find_options(const coap_packet_t *pkt,
                                           const coap_option_num_t num,
                                           uint8_t *count);
@@ -56,7 +56,7 @@ static void _option_nibble(const uint32_t value, uint8_t *nibble)
     }
 }
 
-/* PUBLIC */
+/* --- PUBLIC --------------------------------------------------------------- */
 int coap_build(const coap_packet_t *pkt, uint8_t *buf, size_t *buflen)
 {
     // build header

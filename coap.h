@@ -23,6 +23,17 @@ typedef struct coap_header
     uint16_t id;
 } coap_header_t;
 
+typedef union {
+    uint8_t raw;
+    struct {
+        uint8_t tkl     : 4;
+        uint8_t t       : 2;
+        uint8_t ver     : 2;
+        uint8_t code;
+        uint16_t id;
+    } hdr;
+} coap_raw_header_t;
+
 typedef struct coap_buffer
 {
     const uint8_t *p;

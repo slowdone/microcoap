@@ -1,7 +1,7 @@
 CFLAGS += -Wall -Wextra -O2 -g -DMICROCOAP_DEBUG -I.
 # -DIPV6
 DIRS = example
-SRC = coap.c example/endpoints.c example/main.c
+SRC = coap.c coap_parse.c example/endpoints.c example/main.c
 OBJ = $(SRC:%.c=%.o)
 DEPS = $(SRC:%.c=%.d)
 EXEC = coap

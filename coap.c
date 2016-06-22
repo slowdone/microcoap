@@ -129,8 +129,8 @@ int coap_build(const coap_packet_t *pkt, uint8_t *buf, size_t *buflen)
 
 int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,
                        const coap_responsecode_t rspcode,
-                       const uint8_t *content, const size_t content_len,
                        const coap_content_type_t content_type,
+                       const uint8_t *content, const size_t content_len,
                        coap_packet_t *outpkt, coap_rw_buffer_t *scratch)
 {
     outpkt->hdr.ver = 0x01;
@@ -183,7 +183,7 @@ int coap_handle_request(const coap_endpoint_t *endpoints,
         }
     }
     coap_make_response(inpkt->hdr.id, &inpkt->tok, COAP_RSPCODE_NOT_FOUND,
-                       NULL, 0, COAP_CONTENTTYPE_NONE, outpkt, scratch);
+                       COAP_CONTENTTYPE_NONE, NULL, 0, outpkt, scratch);
     return COAP_SUCCESS;
 }
 

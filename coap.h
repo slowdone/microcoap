@@ -94,7 +94,7 @@ typedef enum
     COAP_OPTION_SIZE2 = 28,
     /* END Block-wise transfers in CoAP */
     COAP_OPTION_PROXY_URI = 35,
-    COAP_OPTION_PROXY_SCHEME = 39
+    COAP_OPTION_PROXY_SCHEME = 39,
     COAP_OPTION_SIZE1 = 60,
 } coap_option_num_t;
 
@@ -190,7 +190,9 @@ typedef enum
 #define COAP_SUCCESS COAP_ERR_NONE
 ///////////////////////
 
-typedef int (*coap_endpoint_func)(const coap_packet_t *inpkt, coap_packet_t *outpkt, coap_rw_buffer_t *scratch);
+typedef int (*coap_endpoint_func)(const coap_packet_t *inpkt,
+                                  coap_packet_t *outpkt,
+                                  coap_rw_buffer_t *scratch);
 
 #define MAX_SEGMENTS 2  // 2 = /foo/bar, 3 = /foo/bar/baz
 typedef struct coap_endpoint_path
@@ -213,14 +215,16 @@ typedef struct coap_endpoint
 ///////////////////////
 int coap_parse(const uint8_t *buf, const size_t buflen, coap_packet_t *pkt);
 int coap_build(const coap_packet_t *pkt, uint8_t *buf, size_t *buflen);
-int coap_make_request(coap_rw_buffer_t *scratch, coap_packet_t *pkt,
-                      const uint8_t *content, size_t content_len,
-                      coap_content_type_t content_type, coap_method_t method,
-                      const coap_endpoint_path_t *path);
+int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
+                      const coap_endpoint_path_t *path,
+                      const coap_method_t method,
+                      const coap_content_type_t content_type,
+                      const uint8_t *content, const size_t content_len,
+                      coap_rw_buffer_t *scratch, coap_packet_t *outpkt);
 int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,
                        const coap_responsecode_t rspcode,
-                       const uint8_t *content, const size_t content_len,
                        const coap_content_type_t content_type,
+                       const uint8_t *content, const size_t content_len,
                        coap_packet_t *outpkt, coap_rw_buffer_t *scratch);
 int coap_handle_request(const coap_endpoint_t *endpoints,
                         const coap_packet_t *inpkt,

@@ -133,7 +133,7 @@ static int _parse_options_payload(const uint8_t *buf, const size_t buflen,
     }
 
     /* Note: 0xFF is payload marker */
-    while ((optionIndex < MAXOPT) && (p < end) && (*p != 0xFF)) {
+    while ((optionIndex < COAP_MAX_OPTIONS) && (p < end) && (*p != 0xFF)) {
         rc = _parse_option(&p, end - p, &pkt->opts[optionIndex], &delta);
         if(rc) {
             return rc;
@@ -166,7 +166,7 @@ int coap_parse(const uint8_t *buf, const size_t buflen, coap_packet_t *pkt)
     if(rc) {
         return rc;
     }
-    pkt->numopts = MAXOPT;
+    pkt->numopts = COAP_MAX_OPTIONS;
     rc = _parse_options_payload(buf, buflen, pkt);
     if(rc) {
         return rc;

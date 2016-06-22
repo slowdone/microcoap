@@ -126,6 +126,49 @@ int coap_build(const coap_packet_t *pkt, uint8_t *buf, size_t *buflen)
     }
     return COAP_SUCCESS;
 }
+int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
+                      const coap_endpoint_path_t *path,
+                      const coap_method_t method,
+                      const coap_content_type_t content_type,
+                      const uint8_t *content, const size_t content_len,
+                      coap_rw_buffer_t *scratch, coap_packet_t *outpkt)
+{
+    // check if path + content_type fit into option array
+    if ((path->count + 1) > COAP_MAX_OPTIONS)
+        return COAP_ERR_BUFFER_TOO_SMALL;
+    // init request header
+    outpkt->hdr.ver = 0x01;
+    outpkt->hdr.t = COAP_TYPE_CON;
+    outpkt->hdr.tkl = 0;
+    outpkt->hdr.code = method;
+    outpkt->hdr.id = msgid;
+    outpkt->numopts = 1;
+    // set token
+    if (tok) {
+        outpkt->hdr.tkl = tok->len;
+        outpkt->tok = *tok;
+    }
+    // copy path to options
+    int i;
+    for (i=0; i < path->count; ++i) {
+        outpkt->opts[i].num = COAP_OPTION_URI_PATH;
+        outpkt->opts[i].buf.p = (const uint8_t *) path->elems[i];
+        outpkt->opts[i].buf.len = strlen(path->elems[i]);
+    }
+    // set content type
+    outpkt->opts[i].num = COAP_OPTION_CONTENT_FORMAT;
+    outpkt->opts[i].buf.p = scratch->p;
+    if (scratch->len < 2) {
+        return COAP_ERR_BUFFER_TOO_SMALL;
+    }
+    scratch->p[0] = ((uint16_t)content_type & 0xFF00) >> 8;
+    scratch->p[1] = ((uint16_t)content_type & 0x00FF);
+    outpkt->opts[i].buf.len = 2;
+    // attach payload
+    outpkt->payload.p = content;
+    outpkt->payload.len = content_len;
+    return COAP_SUCCESS;
+}
 
 int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,
                        const coap_responsecode_t rspcode,
@@ -144,7 +187,7 @@ int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,
         outpkt->hdr.tkl = tok->len;
         outpkt->tok = *tok;
     }
-    // safe because 1 < MAXOPT
+    // safe because 1 < COAP_MAX_OPTIONS
     outpkt->opts[0].num = COAP_OPTION_CONTENT_FORMAT;
     outpkt->opts[0].buf.p = scratch->p;
     if (scratch->len < 2) {

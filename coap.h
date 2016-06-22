@@ -9,7 +9,7 @@ extern "C" {
 #include <stdbool.h>
 #include <stddef.h>
 
-#define MAXOPT 16
+#define COAP_MAX_OPTIONS 8
 
 //http://tools.ietf.org/html/rfc7252#section-3
 typedef struct coap_header
@@ -57,7 +57,7 @@ typedef struct coap_packet
     coap_header_t hdr;          /* Header of the packet */
     coap_buffer_t tok;          /* Token value, size as specified by hdr.tkl */
     uint8_t numopts;            /* Number of options */
-    coap_option_t opts[MAXOPT]; /* Options of the packet. For possible entries see
+    coap_option_t opts[COAP_MAX_OPTIONS]; /* Options of the packet. For possible entries see
                                  * http://tools.ietf.org/html/rfc7252#section-5.10 */
     coap_buffer_t payload;      /* Payload carried by the packet */
 } coap_packet_t;

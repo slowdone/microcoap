@@ -9,8 +9,8 @@
 
 #define PORT 5683
 
-extern void endpoint_setup(const coap_endpoint_t *endpoints);
-extern const coap_endpoint_t endpoints[];
+extern void resource_setup(const coap_resource_t *resources);
+extern const coap_resource_t resources[];
 
 int main(void)
 {
@@ -42,7 +42,7 @@ int main(void)
 #endif /* IPV6 */
     bind(fd,(struct sockaddr *)&servaddr, sizeof(servaddr));
 
-    endpoint_setup(endpoints);
+    resource_setup(resources);
 
     while(1)
     {
@@ -61,27 +61,27 @@ int main(void)
             printf("Bad packet rc=%d\n", rc);
         else
         {
-            size_t rsplen = sizeof(buf);
+            size_t buflen = sizeof(buf);
             coap_packet_t rsppkt;
 #ifdef MICROCOAP_DEBUG
             coap_dump_packet(&pkt);
 #endif
-            coap_handle_request(endpoints, &pkt, &rsppkt, &scratch_buf);
+            coap_handle_request(resources, &pkt, &rsppkt, &scratch_buf);
 
-            if (0 != (rc = coap_build(&rsppkt, buf, &rsplen)))
+            if (0 != (rc = coap_build(&rsppkt, buf, &buflen)))
                 printf("coap_build failed rc=%d\n", rc);
             else
             {
 #ifdef MICROCOAP_DEBUG
                 printf("Sending: ");
-                coap_dump(buf, rsplen, true);
+                coap_dump(buf, buflen, true);
                 printf("\n");
 #endif
 #ifdef MICROCOAP_DEBUG
                 coap_dump_packet(&rsppkt);
 #endif
 
-                sendto(fd, buf, rsplen, 0, (struct sockaddr *)&cliaddr, sizeof(cliaddr));
+                sendto(fd, buf, buflen, 0, (struct sockaddr *)&cliaddr, sizeof(cliaddr));
             }
         }
     }

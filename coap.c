@@ -127,11 +127,11 @@ int coap_build(const coap_packet_t *pkt, uint8_t *buf, size_t *buflen)
     return COAP_SUCCESS;
 }
 int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
-                      const coap_endpoint_path_t *path,
+                      const coap_resource_path_t *path,
                       const coap_method_t method,
                       const coap_content_type_t content_type,
                       const uint8_t *content, const size_t content_len,
-                      coap_rw_buffer_t *scratch, coap_packet_t *outpkt)
+                      coap_packet_t *outpkt, coap_rw_buffer_t *scratch)
 {
     // check if path + content_type fit into option array
     if ((path->count + 1) > COAP_MAX_OPTIONS)
@@ -201,15 +201,15 @@ int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,
     return COAP_SUCCESS;
 }
 
-int coap_handle_request(const coap_endpoint_t *endpoints,
+int coap_handle_request(const coap_resource_t *resources,
                         const coap_packet_t *inpkt,
                         coap_packet_t *outpkt,
                         coap_rw_buffer_t *scratch)
 {
     uint8_t count;
     const coap_option_t *opt = _find_options(inpkt, COAP_OPTION_URI_PATH, &count);
-    // find handler for requested endpoint
-    for (const coap_endpoint_t *ep = endpoints; ep->handler && opt; ++ep) {
+    // find handler for requested resource
+    for (const coap_resource_t *ep = resources; ep->handler && opt; ++ep) {
         if ((ep->method == inpkt->hdr.code) && (count == ep->path->count)){
             int i;
             for (i = 0; i < count; i++) {
@@ -230,15 +230,15 @@ int coap_handle_request(const coap_endpoint_t *endpoints,
     return COAP_SUCCESS;
 }
 
-int coap_build_endpoints(const coap_endpoint_t *endpoints, char *buf, size_t buflen)
+int coap_build_resources(const coap_resource_t *resources, char *buf, size_t buflen)
 {
     if (buflen < 4) { // <>;
         return COAP_ERR_BUFFER_TOO_SMALL;
     }
     memset(buf,0,buflen);
-    // loop over endpoints
+    // loop over resources
     int len = buflen - 1;
-    for (const coap_endpoint_t *ep = endpoints; ep->handler; ++ep) {
+    for (const coap_resource_t *ep = resources; ep->handler; ++ep) {
         if (0 > len) {
             return COAP_ERR_BUFFER_TOO_SMALL;
         }

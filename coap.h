@@ -190,49 +190,48 @@ typedef enum
 #define COAP_SUCCESS COAP_ERR_NONE
 ///////////////////////
 
-typedef int (*coap_endpoint_func)(const coap_packet_t *inpkt,
-                                  coap_packet_t *outpkt,
-                                  coap_rw_buffer_t *scratch);
+typedef int (*coap_resource_handler)(const coap_packet_t *inpkt,
+                                     coap_packet_t *outpkt,
+                                     coap_rw_buffer_t *scratch);
 
 #define MAX_SEGMENTS 2  // 2 = /foo/bar, 3 = /foo/bar/baz
-typedef struct coap_endpoint_path
+typedef struct coap_resource_path
 {
     int count;
     const char *elems[MAX_SEGMENTS];
-} coap_endpoint_path_t;
+} coap_resource_path_t;
 
-typedef struct coap_endpoint
+typedef struct coap_resource
 {
-    coap_method_t method;               // POST, PUT or GET
-    coap_endpoint_func handler;         /* callback function which handles this
-                                         * type of endpoint (and calls
+    const coap_method_t method;         // POST, PUT or GET
+    coap_resource_handler handler;      /* callback function which handles this
+                                         * type of resource (and calls
                                          * coap_make_response() at some point) */
-    const coap_endpoint_path_t *path;   // resource path, e.g. foo/bar/
+    const coap_resource_path_t *path;   // resource path, e.g. foo/bar/
     coap_content_type_t ct;             // content type in payload
-} coap_endpoint_t;
-
+} coap_resource_t;
 
 ///////////////////////
 int coap_parse(const uint8_t *buf, const size_t buflen, coap_packet_t *pkt);
 int coap_build(const coap_packet_t *pkt, uint8_t *buf, size_t *buflen);
 int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
-                      const coap_endpoint_path_t *path,
+                      const coap_resource_path_t *path,
                       const coap_method_t method,
                       const coap_content_type_t content_type,
                       const uint8_t *content, const size_t content_len,
-                      coap_rw_buffer_t *scratch, coap_packet_t *outpkt);
+                      coap_packet_t *outpkt, coap_rw_buffer_t *scratch);
 int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,
                        const coap_responsecode_t rspcode,
                        const coap_content_type_t content_type,
                        const uint8_t *content, const size_t content_len,
                        coap_packet_t *outpkt, coap_rw_buffer_t *scratch);
-int coap_handle_request(const coap_endpoint_t *endpoints,
+int coap_handle_request(const coap_resource_t *resources,
                         const coap_packet_t *inpkt,
                         coap_packet_t *outpkt,
                         coap_rw_buffer_t *scratch);
 int coap_handle_response();
 int coap_handle_packet();
-int coap_build_endpoints(const coap_endpoint_t *endpoints,
+int coap_build_resources(const coap_resource_t *resources,
                          char *buf, size_t buflen);
 
 #ifdef __cplusplus

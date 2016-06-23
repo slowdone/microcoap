@@ -127,20 +127,19 @@ int coap_build(const coap_packet_t *pkt, uint8_t *buf, size_t *buflen)
     return COAP_SUCCESS;
 }
 int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
-                      const coap_resource_path_t *path,
-                      const coap_method_t method,
-                      const uint8_t *content_type,
+                      const coap_resource_t *resource,
                       const uint8_t *content, const size_t content_len,
                       coap_packet_t *outpkt)
 {
     // check if path elements + content type fit into option array
+    const coap_resource_path_t *path = resource->path;
     if ((path->count + 1) > COAP_MAX_OPTIONS)
         return COAP_ERR_BUFFER_TOO_SMALL;
     // init request header
     outpkt->hdr.ver = 0x01;
     outpkt->hdr.t = COAP_TYPE_CON;
     outpkt->hdr.tkl = 0;
-    outpkt->hdr.code = method;
+    outpkt->hdr.code = resource->method;
     outpkt->hdr.id = msgid;
     outpkt->numopts = 1;
     // set token
@@ -160,9 +159,9 @@ int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
         outpkt->opts[i].buf.len = strlen(path->elems[i]);
     }
     // set content type, if present afterwards
-    if (content_type) {
+    if (COAP_GET_CONTENTTYPE(resource->content_type, 2) != COAP_CONTENTTYPE_NONE) {
         outpkt->opts[i].num = COAP_OPTION_CONTENT_FORMAT;
-        outpkt->opts[i].buf.p = content_type;
+        outpkt->opts[i].buf.p = resource->content_type;
         outpkt->opts[i].buf.len = 2;
     }
     // attach payload
@@ -227,7 +226,8 @@ int coap_handle_request(const coap_resource_t *resources,
     return COAP_SUCCESS;
 }
 
-int coap_build_resources(const coap_resource_t *resources, char *buf, size_t buflen)
+int coap_build_resources(const coap_resource_t *resources,
+                         char *buf, size_t buflen)
 {
     if (buflen < 4) { // <>;
         return COAP_ERR_BUFFER_TOO_SMALL;
@@ -236,13 +236,11 @@ int coap_build_resources(const coap_resource_t *resources, char *buf, size_t buf
     // loop over resources
     int len = buflen - 1;
     for (const coap_resource_t *ep = resources; ep->handler; ++ep) {
-        if (0 > len) {
+        if (0 > len)
             return COAP_ERR_BUFFER_TOO_SMALL;
-        }
         // skip if missing content type
-        if (COAP_CONTENTTYPE_NONE == COAP_GET_CONTENTTYPE(ep->content_type)) {
+        if (COAP_CONTENTTYPE_NONE == COAP_GET_CONTENTTYPE(ep->content_type, 2))
             continue;
-        }
         // comma separated list
         if (0 < strlen(buf)) {
             strncat(buf, ",", len);
@@ -263,7 +261,8 @@ int coap_build_resources(const coap_resource_t *resources, char *buf, size_t buf
         strncat(buf, ">;", len);
         len -= 2;
         // append content type
-        len -= sprintf(buf + (buflen - len - 1), "ct=%d", COAP_GET_CONTENTTYPE(ep->content_type));
+        len -= sprintf(buf + (buflen - len - 1), "ct=%d",
+                       COAP_GET_CONTENTTYPE(ep->content_type, 2));
     }
     return COAP_SUCCESS;
 }

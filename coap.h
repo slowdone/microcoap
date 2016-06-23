@@ -213,15 +213,19 @@ typedef struct coap_resource
 } coap_resource_t;
 
 #define COAP_SET_CONTENTTYPE(ct)   {((int16_t)ct & 0xFF00) >> 8, ((int16_t)ct & 0x00FF)}
-#define COAP_GET_CONTENTTYPE(ct)    ((int16_t)(ct[0] << 8 | ct[1]))
+
+inline int16_t COAP_GET_CONTENTTYPE(const uint8_t *buf, const size_t buflen)
+{
+    if (buf && (buflen == 2))
+        return ((int16_t)(buf[0] << 8 | buf[1]));
+    return COAP_CONTENTTYPE_NONE;
+}
 
 ///////////////////////
 int coap_parse(const uint8_t *buf, const size_t buflen, coap_packet_t *pkt);
 int coap_build(const coap_packet_t *pkt, uint8_t *buf, size_t *buflen);
 int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
-                      const coap_resource_path_t *path,
-                      const coap_method_t method,
-                      const uint8_t *content_type,
+                      const coap_resource_t *resource,
                       const uint8_t *content, const size_t content_len,
                       coap_packet_t *outpkt);
 int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,

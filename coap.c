@@ -12,6 +12,7 @@ static const coap_option_t *_find_options(const coap_packet_t *pkt,
                                           uint8_t *count);
 static void _option_nibble(const uint32_t value, uint8_t *nibble);
 
+static uint16_t seqno = 0;
 /*
  * options are always stored consecutively,
  * so can return a block with same option num
@@ -127,6 +128,7 @@ int coap_build(const coap_packet_t *pkt, uint8_t *buf, size_t *buflen)
     return COAP_SUCCESS;
 }
 int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
+                      const coap_msgtype_t msgt,
                       const coap_resource_t *resource,
                       const uint8_t *content, const size_t content_len,
                       coap_packet_t *outpkt)
@@ -137,7 +139,7 @@ int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
         return COAP_ERR_BUFFER_TOO_SMALL;
     // init request header
     outpkt->hdr.ver = 0x01;
-    outpkt->hdr.t = COAP_TYPE_CON;
+    outpkt->hdr.t = msgt;
     outpkt->hdr.tkl = 0;
     outpkt->hdr.code = resource->method;
     outpkt->hdr.id = msgid;
@@ -168,6 +170,13 @@ int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
     outpkt->payload.p = content;
     outpkt->payload.len = content_len;
     return COAP_SUCCESS;
+}
+
+int coap_put_request(const coap_resource_t *resource, const bool confirm,
+                     const uint8_t *content, const size_t content_len,
+                     coap_packet_t *outpkt)
+{
+    return coap_make_request(++seqno, NULL, (confirm ? COAP_TYPE_CON: COAP_TYPE_NONCON), resource, content, content_len, outpkt);
 }
 
 int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,

@@ -226,13 +226,9 @@ inline int16_t COAP_GET_CONTENTTYPE(const uint8_t *buf, const size_t buflen)
 int coap_parse(const uint8_t *buf, const size_t buflen, coap_packet_t *pkt);
 int coap_build(const coap_packet_t *pkt, uint8_t *buf, size_t *buflen);
 int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
-                      const coap_msgtype_t msgt,
-                      const coap_resource_t *resource,
+                      const bool confirm, const coap_resource_t *resource,
                       const uint8_t *content, const size_t content_len,
                       coap_packet_t *outpkt);
-int coap_put_request(const coap_resource_t *resource, const bool confirm,
-                     const uint8_t *content, const size_t content_len,
-                     coap_packet_t *outpkt);
 int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,
                        const coap_responsecode_t rspcode,
                        const uint8_t *content_type,

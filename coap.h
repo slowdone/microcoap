@@ -189,10 +189,11 @@ typedef enum
 } coap_error_t;
 #define COAP_SUCCESS COAP_ERR_NONE
 ///////////////////////
+typedef struct coap_resource coap_resource_t;
 
-typedef int (*coap_resource_handler)(const coap_packet_t *inpkt,
-                                     coap_packet_t *outpkt,
-                                     coap_rw_buffer_t *scratch);
+typedef int (*coap_resource_handler)(const coap_resource_t *resource,
+                                     const coap_packet_t *inpkt,
+                                     coap_packet_t *outpkt);
 
 #define MAX_SEGMENTS 2  // 2 = /foo/bar, 3 = /foo/bar/baz
 typedef struct coap_resource_path
@@ -208,8 +209,11 @@ typedef struct coap_resource
                                          * type of resource (and calls
                                          * coap_make_response() at some point) */
     const coap_resource_path_t *path;   // resource path, e.g. foo/bar/
-    coap_content_type_t ct;             // content type in payload
+    const uint8_t content_type[2];
 } coap_resource_t;
+
+#define COAP_SET_CONTENTTYPE(ct)   {((int16_t)ct & 0xFF00) >> 8, ((int16_t)ct & 0x00FF)}
+#define COAP_GET_CONTENTTYPE(ct)    ((int16_t)(ct[0] << 8 | ct[1]))
 
 ///////////////////////
 int coap_parse(const uint8_t *buf, const size_t buflen, coap_packet_t *pkt);
@@ -217,18 +221,17 @@ int coap_build(const coap_packet_t *pkt, uint8_t *buf, size_t *buflen);
 int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
                       const coap_resource_path_t *path,
                       const coap_method_t method,
-                      const coap_content_type_t content_type,
+                      const uint8_t *content_type,
                       const uint8_t *content, const size_t content_len,
-                      coap_packet_t *outpkt, coap_rw_buffer_t *scratch);
+                      coap_packet_t *outpkt);
 int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,
                        const coap_responsecode_t rspcode,
-                       const coap_content_type_t content_type,
+                       const uint8_t *content_type,
                        const uint8_t *content, const size_t content_len,
-                       coap_packet_t *outpkt, coap_rw_buffer_t *scratch);
+                       coap_packet_t *outpkt);
 int coap_handle_request(const coap_resource_t *resources,
                         const coap_packet_t *inpkt,
-                        coap_packet_t *outpkt,
-                        coap_rw_buffer_t *scratch);
+                        coap_packet_t *outpkt);
 int coap_handle_response();
 int coap_handle_packet();
 int coap_build_resources(const coap_resource_t *resources,

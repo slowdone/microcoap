@@ -129,11 +129,11 @@ int coap_build(const coap_packet_t *pkt, uint8_t *buf, size_t *buflen)
 int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
                       const coap_resource_path_t *path,
                       const coap_method_t method,
-                      const coap_content_type_t content_type,
+                      const uint8_t *content_type,
                       const uint8_t *content, const size_t content_len,
-                      coap_packet_t *outpkt, coap_rw_buffer_t *scratch)
+                      coap_packet_t *outpkt)
 {
-    // check if path + content_type fit into option array
+    // check if path elements + content type fit into option array
     if ((path->count + 1) > COAP_MAX_OPTIONS)
         return COAP_ERR_BUFFER_TOO_SMALL;
     // init request header
@@ -148,22 +148,23 @@ int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
         outpkt->hdr.tkl = tok->len;
         outpkt->tok = *tok;
     }
-    // copy path to options
+    /*
+     * NOTE: coap options MUST be in ascending order, i.e.,
+     *       COAP_OPTION_URI_PATH (11) < COAP_OPTION_CONTENT_FORMAT (12)
+     */
+    // copy path to options, first
     int i;
     for (i=0; i < path->count; ++i) {
         outpkt->opts[i].num = COAP_OPTION_URI_PATH;
         outpkt->opts[i].buf.p = (const uint8_t *) path->elems[i];
         outpkt->opts[i].buf.len = strlen(path->elems[i]);
     }
-    // set content type
-    outpkt->opts[i].num = COAP_OPTION_CONTENT_FORMAT;
-    outpkt->opts[i].buf.p = scratch->p;
-    if (scratch->len < 2) {
-        return COAP_ERR_BUFFER_TOO_SMALL;
+    // set content type, if present afterwards
+    if (content_type) {
+        outpkt->opts[i].num = COAP_OPTION_CONTENT_FORMAT;
+        outpkt->opts[i].buf.p = content_type;
+        outpkt->opts[i].buf.len = 2;
     }
-    scratch->p[0] = ((uint16_t)content_type & 0xFF00) >> 8;
-    scratch->p[1] = ((uint16_t)content_type & 0x00FF);
-    outpkt->opts[i].buf.len = 2;
     // attach payload
     outpkt->payload.p = content;
     outpkt->payload.len = content_len;
@@ -172,9 +173,9 @@ int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
 
 int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,
                        const coap_responsecode_t rspcode,
-                       const coap_content_type_t content_type,
+                       const uint8_t *content_type,
                        const uint8_t *content, const size_t content_len,
-                       coap_packet_t *outpkt, coap_rw_buffer_t *scratch)
+                       coap_packet_t *outpkt)
 {
     outpkt->hdr.ver = 0x01;
     outpkt->hdr.t = COAP_TYPE_ACK;
@@ -187,15 +188,12 @@ int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,
         outpkt->hdr.tkl = tok->len;
         outpkt->tok = *tok;
     }
-    // safe because 1 < COAP_MAX_OPTIONS
-    outpkt->opts[0].num = COAP_OPTION_CONTENT_FORMAT;
-    outpkt->opts[0].buf.p = scratch->p;
-    if (scratch->len < 2) {
-        return COAP_ERR_BUFFER_TOO_SMALL;
+    if (content_type) {
+        // safe because 1 < COAP_MAX_OPTIONS
+        outpkt->opts[0].num = COAP_OPTION_CONTENT_FORMAT;
+        outpkt->opts[0].buf.p = content_type;
+        outpkt->opts[0].buf.len = 2;
     }
-    scratch->p[0] = ((uint16_t)content_type & 0xFF00) >> 8;
-    scratch->p[1] = ((uint16_t)content_type & 0x00FF);
-    outpkt->opts[0].buf.len = 2;
     outpkt->payload.p = content;
     outpkt->payload.len = content_len;
     return COAP_SUCCESS;
@@ -203,8 +201,7 @@ int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,
 
 int coap_handle_request(const coap_resource_t *resources,
                         const coap_packet_t *inpkt,
-                        coap_packet_t *outpkt,
-                        coap_rw_buffer_t *scratch)
+                        coap_packet_t *outpkt)
 {
     uint8_t count;
     const coap_option_t *opt = _find_options(inpkt, COAP_OPTION_URI_PATH, &count);
@@ -221,12 +218,12 @@ int coap_handle_request(const coap_resource_t *resources,
                 }
             }
             if (i == count) {
-                return ep->handler(inpkt, outpkt, scratch);
+                return ep->handler(ep, inpkt, outpkt);
             }
         }
     }
     coap_make_response(inpkt->hdr.id, &inpkt->tok, COAP_RSPCODE_NOT_FOUND,
-                       COAP_CONTENTTYPE_NONE, NULL, 0, outpkt, scratch);
+                       NULL, NULL, 0, outpkt);
     return COAP_SUCCESS;
 }
 
@@ -243,7 +240,7 @@ int coap_build_resources(const coap_resource_t *resources, char *buf, size_t buf
             return COAP_ERR_BUFFER_TOO_SMALL;
         }
         // skip if missing content type
-        if (ep->ct == COAP_CONTENTTYPE_NONE) {
+        if (COAP_CONTENTTYPE_NONE == COAP_GET_CONTENTTYPE(ep->content_type)) {
             continue;
         }
         // comma separated list
@@ -266,7 +263,7 @@ int coap_build_resources(const coap_resource_t *resources, char *buf, size_t buf
         strncat(buf, ">;", len);
         len -= 2;
         // append content type
-        len -= sprintf(buf + (buflen - len - 1), "ct=%d", (int)ep->ct);
+        len -= sprintf(buf + (buflen - len - 1), "ct=%d", COAP_GET_CONTENTTYPE(ep->content_type));
     }
     return COAP_SUCCESS;
 }

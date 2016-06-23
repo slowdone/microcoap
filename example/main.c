@@ -21,8 +21,6 @@ int main(void)
     struct sockaddr_in servaddr, cliaddr;
 #endif /* IPV6 */
     uint8_t buf[1024];
-    uint8_t scratch_raw[1024];
-    coap_rw_buffer_t scratch_buf = {scratch_raw, sizeof(scratch_raw)};
 
 #ifdef IPV6
     fd = socket(AF_INET6,SOCK_DGRAM,0);
@@ -66,7 +64,7 @@ int main(void)
 #ifdef MICROCOAP_DEBUG
             coap_dump_packet(&pkt);
 #endif
-            coap_handle_request(resources, &pkt, &rsppkt, &scratch_buf);
+            coap_handle_request(resources, &pkt, &rsppkt);
 
             if (0 != (rc = coap_build(&rsppkt, buf, &buflen)))
                 printf("coap_build failed rc=%d\n", rc);

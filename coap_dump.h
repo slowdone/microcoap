@@ -7,12 +7,8 @@ extern "C" {
 
 #include "coap.h"
 
-#if MICROCOAP_DEBUG
-
 void coap_dump(const uint8_t *buf, size_t buflen, bool bare);
 void coap_dump_packet(const coap_packet_t *pkt);
-
-#endif /* MICROCOAP_DEBUG */
 
 #ifdef __cplusplus
 }

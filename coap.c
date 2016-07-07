@@ -222,7 +222,8 @@ int coap_handle_request(const coap_resource_t *resources,
         }
     }
     coap_make_response(inpkt->hdr.id, &inpkt->tok, COAP_RSPCODE_NOT_FOUND,
-                       NULL, NULL, 0, outpkt);
+                       (const uint8_t[])COAP_SET_CONTENTTYPE(COAP_CONTENTTYPE_NONE),
+                       NULL, 0, outpkt);
     return COAP_SUCCESS;
 }
 

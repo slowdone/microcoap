@@ -198,26 +198,26 @@ int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,
     return COAP_SUCCESS;
 }
 
-int coap_handle_request(const coap_resource_t *resources,
+int coap_handle_request(const coap_resource_t *resources, size_t resources_len,
                         const coap_packet_t *inpkt,
                         coap_packet_t *outpkt)
 {
     uint8_t count;
     const coap_option_t *opt = _find_options(inpkt, COAP_OPTION_URI_PATH, &count);
     // find handler for requested resource
-    for (const coap_resource_t *ep = resources; ep->handler && opt; ++ep) {
-        if ((ep->method == inpkt->hdr.code) && (count == ep->path->count)){
+    for (size_t j = 0; (j < resources_len) && opt; ++j) {
+        if ((resources[j].method == inpkt->hdr.code) && (count == resources[j].path->count)){
             int i;
             for (i = 0; i < count; i++) {
-                if (opt[i].buf.len != strlen(ep->path->elems[i])) {
+                if (opt[i].buf.len != strlen(resources[j].path->elems[i])) {
                     break;
                 }
-                if (memcmp(ep->path->elems[i], opt[i].buf.p, opt[i].buf.len)) {
+                if (memcmp(resources[j].path->elems[i], opt[i].buf.p, opt[i].buf.len)) {
                     break;
                 }
             }
             if (i == count) {
-                return ep->handler(ep, inpkt, outpkt);
+                return resources[j].handler(&resources[j], inpkt, outpkt);
             }
         }
     }
@@ -227,43 +227,40 @@ int coap_handle_request(const coap_resource_t *resources,
     return COAP_SUCCESS;
 }
 
-int coap_build_resources(const coap_resource_t *resources,
+int coap_build_resources(const coap_resource_t *resources, size_t resources_len,
                          char *buf, size_t buflen)
 {
     if (buflen < 4) { // <>;
         return COAP_ERR_BUFFER_TOO_SMALL;
     }
-    memset(buf,0,buflen);
+    memset(buf, 0, buflen);
     // loop over resources
     int len = buflen - 1;
-    for (const coap_resource_t *ep = resources; ep->handler; ++ep) {
+    for (size_t i = 0; i < resources_len; ++i) {
         if (0 > len)
             return COAP_ERR_BUFFER_TOO_SMALL;
         // skip if missing content type
-        if (COAP_CONTENTTYPE_NONE == COAP_GET_CONTENTTYPE(ep->content_type, 2))
+        if (COAP_CONTENTTYPE_NONE == COAP_GET_CONTENTTYPE(resources[i].content_type, 2))
             continue;
         // comma separated list
         if (0 < strlen(buf)) {
-            strncat(buf, ",", len);
-            len--;
+            strncat(buf, ",", len--);
         }
         // insert < at path beginning
-        strncat(buf, "<", len);
-        len--;
+        strncat(buf, "<", len--);
         // insert path by elements
-        for (int i = 0; i < ep->path->count; i++) {
-            strncat(buf, "/", len);
-            len--;
-
-            strncat(buf, ep->path->elems[i], len);
-            len -= strlen(ep->path->elems[i]);
+        for (size_t j = 0; j < resources[i].path->count; ++j) {
+            strncat(buf, "/", len--);
+            strncat(buf, resources[i].path->elems[j], len);
+            len -= strlen(resources[i].path->elems[j]);
         }
         // insert >; after path
         strncat(buf, ">;", len);
         len -= 2;
         // append content type
         len -= sprintf(buf + (buflen - len - 1), "ct=%d",
-                       COAP_GET_CONTENTTYPE(ep->content_type, 2));
+                       COAP_GET_CONTENTTYPE(resources[i].content_type, 2));
     }
+
     return COAP_SUCCESS;
 }

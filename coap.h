@@ -234,12 +234,12 @@ int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,
                        const uint8_t *content_type,
                        const uint8_t *content, const size_t content_len,
                        coap_packet_t *outpkt);
-int coap_handle_request(const coap_resource_t *resources,
+int coap_handle_request(const coap_resource_t *resources, size_t resources_len,
                         const coap_packet_t *inpkt,
                         coap_packet_t *outpkt);
 int coap_handle_response();
 int coap_handle_packet();
-int coap_build_resources(const coap_resource_t *resources,
+int coap_build_resources(const coap_resource_t *resources, size_t resources_len,
                          char *buf, size_t buflen);
 
 #ifdef __cplusplus

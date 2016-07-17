@@ -239,7 +239,7 @@ int coap_handle_request(const coap_resource_t *resources,
                         coap_packet_t *outpkt);
 int coap_handle_response();
 int coap_handle_packet();
-int coap_build_resources(const coap_resource_t *resources,
+int coap_make_link_format(const coap_resource_t *resources,
                          char *buf, size_t buflen);
 
 #ifdef __cplusplus

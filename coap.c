@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stddef.h>
+#include <arpa/inet.h>
+
 #include "coap.h"
 
 /* --- PRIVATE -------------------------------------------------------------- */
@@ -68,7 +70,7 @@ int coap_build(const coap_packet_t *pkt, uint8_t *buf, size_t *buflen)
     r->hdr.t = pkt->hdr.t;
     r->hdr.tkl = pkt->hdr.tkl;
     r->hdr.code = pkt->hdr.code;
-    r->hdr.id = pkt->hdr.id;
+    r->hdr.id = htons(pkt->hdr.id);
     // inject token
     uint8_t *p = buf + sizeof(coap_raw_header_t);
     if ((pkt->hdr.tkl > 0) && (pkt->hdr.tkl != pkt->tok.len)) {
@@ -226,7 +228,7 @@ int coap_handle_request(const coap_resource_t *resources,
     return COAP_SUCCESS;
 }
 
-int coap_build_resources(const coap_resource_t *resources,
+int coap_make_link_format(const coap_resource_t *resources,
                          char *buf, size_t buflen)
 {
     if (buflen < 4) { // <>;

@@ -47,7 +47,7 @@ static int handle_put_light(const coap_resource_t *resource,
     if (inpkt->payload.len == 0) {
         return coap_make_response(inpkt->hdr.id, &inpkt->tok,
                                   COAP_RSPCODE_BAD_REQUEST,
-                                  resource->content_type,
+                                  COAP_CONTENTTYPE_NONE,
                                   NULL, 0,
                                   outpkt);
     }

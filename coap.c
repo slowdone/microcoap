@@ -215,12 +215,13 @@ int coap_handle_request(const coap_resource_t *resources,
                         coap_packet_t *outpkt)
 {
     uint8_t count;
+    coap_responsecode_t rspcode = COAP_RSPCODE_NOT_IMPLEMENTED;
     const coap_option_t *opt = _find_options(inpkt, COAP_OPTION_URI_PATH, &count);
     // find handler for requested resource
     for (const coap_resource_t *ep = resources; ep->handler && opt; ++ep) {
         if ((ep->method == inpkt->hdr.code) && (count == ep->path->count)){
             int i;
-            for (i = 0; i < count; i++) {
+            for (i = 0; i < count; ++i) {
                 if (opt[i].buf.len != strlen(ep->path->elems[i])) {
                     break;
                 }
@@ -231,10 +232,14 @@ int coap_handle_request(const coap_resource_t *resources,
             if (i == count) {
                 return ep->handler(ep, inpkt, outpkt);
             }
+            rspcode = COAP_RSPCODE_NOT_FOUND;
+        }
+        else {
+            rspcode = COAP_RSPCODE_METHOD_NOT_ALLOWED;
         }
     }
     coap_make_response(inpkt->hdr.id, &inpkt->tok,
-                       COAP_TYPE_ACK, COAP_RSPCODE_NOT_FOUND,
+                       COAP_TYPE_ACK, rspcode,
                        NULL, NULL, 0, outpkt);
     return COAP_SUCCESS;
 }

@@ -129,7 +129,8 @@ int coap_build(const coap_packet_t *pkt, uint8_t *buf, size_t *buflen)
     return COAP_SUCCESS;
 }
 int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
-                      const bool confirm, const coap_resource_t *resource,
+                      const coap_msgtype_t msgtype,
+                      const coap_resource_t *resource,
                       const uint8_t *content, const size_t content_len,
                       coap_packet_t *pkt)
 {
@@ -139,7 +140,7 @@ int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
         return COAP_ERR_BUFFER_TOO_SMALL;
     // init request header
     pkt->hdr.ver = 0x01;
-    pkt->hdr.t = (confirm ? COAP_TYPE_CON: COAP_TYPE_NONCON);
+    pkt->hdr.t = msgtype;
     pkt->hdr.tkl = 0;
     pkt->hdr.code = resource->method;
     pkt->hdr.id = msgid;
@@ -238,10 +239,9 @@ int coap_handle_request(const coap_resource_t *resources,
             rspcode = COAP_RSPCODE_METHOD_NOT_ALLOWED;
         }
     }
-    coap_make_response(inpkt->hdr.id, &inpkt->tok,
+    return coap_make_response(inpkt->hdr.id, &inpkt->tok,
                        COAP_TYPE_ACK, rspcode,
                        NULL, NULL, 0, pkt);
-    return COAP_SUCCESS;
 }
 
 int coap_make_link_format(const coap_resource_t *resources,

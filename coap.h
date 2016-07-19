@@ -271,7 +271,8 @@ int coap_make_ack(const uint16_t msgid, const coap_buffer_t* tok,
 
 
 int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
-                      const bool confirm, const coap_resource_t *resource,
+                      const coap_msgtype_t msgtype,
+                      const coap_resource_t *resource,
                       const uint8_t *content, const size_t content_len,
                       coap_packet_t *pkt);
 
@@ -297,6 +298,19 @@ int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,
                        const uint8_t *content_type,
                        const uint8_t *content, const size_t content_len,
                        coap_packet_t *pkt);
+
+/**
+ * Handles the request in \p inpkt, and creates a response packet which is
+ * stored in \p pkt.
+ *
+ * @param[in] resources Pointer to the coap_resource_t array of all resources.
+ * @param[in] inpkt Pointer to the coap_packet_t structure containing the
+ * request.
+ * @param[out] pkt Pointer to the coap_packet_t structure that will be
+ * filled, then containing the response.
+ *
+ * @return 0 on success, or a reasonable error code on failure.
+ */
 int coap_handle_request(const coap_resource_t *resources,
                         const coap_packet_t *inpkt,
                         coap_packet_t *pkt);

@@ -16,39 +16,39 @@ void resource_setup(const coap_resource_t *resources)
 static const coap_resource_path_t path_well_known_core = {2, {".well-known", "core"}};
 static int handle_get_well_known_core(const coap_resource_t *resource,
                                       const coap_packet_t *inpkt,
-                                      coap_packet_t *outpkt)
+                                      coap_packet_t *pkt)
 {
     printf("handle_get_well_known_core\n");
     return coap_make_response(inpkt->hdr.id, &inpkt->tok,
                               COAP_TYPE_ACK, COAP_RSPCODE_CONTENT,
                               resource->content_type,
                               (const uint8_t *)rsp, strlen(rsp),
-                              outpkt);
+                              pkt);
 }
 
 static const coap_resource_path_t path_light = {1, {"light"}};
 static int handle_get_light(const coap_resource_t *resource,
                             const coap_packet_t *inpkt,
-                            coap_packet_t *outpkt)
+                            coap_packet_t *pkt)
 {
     printf("handle_get_light\n");
     return coap_make_response(inpkt->hdr.id, &inpkt->tok,
                               COAP_TYPE_ACK, COAP_RSPCODE_CONTENT,
                               resource->content_type,
                               (const uint8_t *)&light, 1,
-                              outpkt);
+                              pkt);
 }
 
 static int handle_put_light(const coap_resource_t *resource,
                             const coap_packet_t *inpkt,
-                            coap_packet_t *outpkt)
+                            coap_packet_t *pkt)
 {
     printf("handle_put_light\n");
     if (inpkt->payload.len == 0) {
         return coap_make_response(inpkt->hdr.id, &inpkt->tok,
                                   COAP_TYPE_ACK, COAP_RSPCODE_BAD_REQUEST,
                                   NULL, NULL, 0,
-                                  outpkt);
+                                  pkt);
     }
     if (inpkt->payload.p[0] == '1') {
         light = '1';
@@ -62,7 +62,7 @@ static int handle_put_light(const coap_resource_t *resource,
                               COAP_TYPE_ACK, COAP_RSPCODE_CHANGED,
                               resource->content_type,
                               (const uint8_t *)&light, 1,
-                              outpkt);
+                              pkt);
 }
 
 const coap_resource_t resources[] =

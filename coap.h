@@ -190,11 +190,6 @@ typedef enum
 } coap_error_t;
 #define COAP_SUCCESS COAP_ERR_NONE
 ///////////////////////
-typedef struct coap_resource coap_resource_t;
-
-typedef int (*coap_resource_handler)(const coap_resource_t *resource,
-                                     const coap_packet_t *inpkt,
-                                     coap_packet_t *outpkt);
 
 #define MAX_SEGMENTS 2  // 2 = /foo/bar, 3 = /foo/bar/baz
 typedef struct coap_resource_path
@@ -203,7 +198,13 @@ typedef struct coap_resource_path
     const char *elems[MAX_SEGMENTS];
 } coap_resource_path_t;
 
-typedef struct coap_resource
+typedef struct coap_resource coap_resource_t;
+
+typedef int (*coap_resource_handler)(const coap_resource_t *resource,
+                                     const coap_packet_t *inpkt,
+                                     coap_packet_t *pkt);
+
+struct coap_resource
 {
     const coap_method_t method;         // POST, PUT or GET
     coap_resource_handler handler;      /* callback function which handles this
@@ -211,7 +212,7 @@ typedef struct coap_resource
                                          * coap_make_response() at some point) */
     const coap_resource_path_t *path;   // resource path, e.g. foo/bar/
     const uint8_t content_type[2];
-} coap_resource_t;
+};
 
 #define COAP_SET_CONTENTTYPE(ct)   {((int16_t)ct & 0xFF00) >> 8, ((int16_t)ct & 0x00FF)}
 
@@ -222,24 +223,83 @@ inline int16_t COAP_GET_CONTENTTYPE(const uint8_t *buf, const size_t buflen)
     return COAP_CONTENTTYPE_NONE;
 }
 
-///////////////////////
+/**
+ * Parses the content of \p buf (i.e. the content of a UDP packet) and
+ * writes the values to \p pkt.
+ *
+ * @param[in] buf The buffer containing the CoAP packet in binary format.
+ * @param[in] buflen The lenth of \p buf in bytes.
+ * @param[out] pkt The coap_packet_t structure to be filled.
+ *
+ * @return 0 on success, or the according coap_error_t
+ */
 int coap_parse(const uint8_t *buf, const size_t buflen, coap_packet_t *pkt);
+
+/**
+ * Creates a CoAP message from the data in \p pkt and writes the
+ * result to \p buf. The actual size of the whole message (which
+ * may be smaller than the size of the buffer) will be written to
+ * \p buflen. You should use that value (and not \p buflen)
+ * when you send the message.
+ *
+ * @param[in] pkt The packet that is to be converted to binary format.
+ * @param[out] buf Byte buffer to which the CoAP packet in binary format will
+ * be written to.
+ * @param[in,out] buflen Contains the initial size of \p buf, then stores how
+ * many bytes have been written to \p buf.
+ *
+ * @return 0 on success, or COAP_ERR_BUFFER_TOO_SMALL if the size of
+ * \p buf is not sufficient, or COAP_ERR_UNSUPPORTED if
+ * the token length specified in the header does not match the
+ * token length specified in the buffer that actually holds the
+ * tokens
+ */
 int coap_build(const coap_packet_t *pkt, uint8_t *buf, size_t *buflen);
+
+/**
+ * Creates an ACK packet for the given message ID, and stores it in the
+ * coap_packet_t structure pointed to by \p pkt.
+ *
+ * @param[in] msgid The message ID.
+ * @param[in] tok Pointer to the token used.
+ * @param[out] pkt Pointer to the coap_packet_t structure to be filled
+ *
+ * @return Always returns 0.
+ */
 int coap_make_ack(const uint16_t msgid, const coap_buffer_t* tok,
-                  coap_packet_t *outpkt);
+                  coap_packet_t *pkt);
+
+
 int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
                       const bool confirm, const coap_resource_t *resource,
                       const uint8_t *content, const size_t content_len,
-                      coap_packet_t *outpkt);
+                      coap_packet_t *pkt);
+
+/**
+ * Creates a response-only packet for a request, and stores it in
+ * the coap_packet_t structure pointed to by \p pkt.
+ *
+ * @param[in] msgid The message ID.
+ * @param[in] tok Pointer to the token used.
+ * @param[in] msgtype The message type (CON, NON, ACK).
+ * @param[in] rspcode The response code.
+ * @param[in] content_type The content type (i.e. what does the payload contain)
+ * @param[in] content The response payload.
+ * @param[in] content_len Length of \p content in bytes.
+ * @param[out] pkt Pointer to the coap_packet_t that will be filled.
+ *
+ * @return 0 on success, or COAP_ERR_BUFFER_TOO_SMALL if the length of the
+ * buffer pointed to by scratch is smaller than 2.
+ */
 int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,
                        const coap_msgtype_t msgtype,
                        const coap_responsecode_t rspcode,
                        const uint8_t *content_type,
                        const uint8_t *content, const size_t content_len,
-                       coap_packet_t *outpkt);
+                       coap_packet_t *pkt);
 int coap_handle_request(const coap_resource_t *resources,
                         const coap_packet_t *inpkt,
-                        coap_packet_t *outpkt);
+                        coap_packet_t *pkt);
 int coap_handle_response();
 int coap_handle_packet();
 int coap_make_link_format(const coap_resource_t *resources,

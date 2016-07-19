@@ -1,4 +1,4 @@
-CFLAGS += -Wall -Wextra -O2 -g -DMICROCOAP_DEBUG -I.
+CFLAGS += -std=c99 -Wall -Wextra -Werror -O2 -I.
 # -DIPV6
 DIRS = example
 SRC = coap.c coap_dump.c coap_parse.c example/resources.c example/main.c

@@ -131,23 +131,23 @@ int coap_build(const coap_packet_t *pkt, uint8_t *buf, size_t *buflen)
 int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
                       const bool confirm, const coap_resource_t *resource,
                       const uint8_t *content, const size_t content_len,
-                      coap_packet_t *outpkt)
+                      coap_packet_t *pkt)
 {
     const coap_resource_path_t *path = resource->path;
     // check if path elements + content type fit into option array
     if ((path->count + 1) > COAP_MAX_OPTIONS)
         return COAP_ERR_BUFFER_TOO_SMALL;
     // init request header
-    outpkt->hdr.ver = 0x01;
-    outpkt->hdr.t = (confirm ? COAP_TYPE_CON: COAP_TYPE_NONCON);
-    outpkt->hdr.tkl = 0;
-    outpkt->hdr.code = resource->method;
-    outpkt->hdr.id = msgid;
-    outpkt->numopts = 1;
+    pkt->hdr.ver = 0x01;
+    pkt->hdr.t = (confirm ? COAP_TYPE_CON: COAP_TYPE_NONCON);
+    pkt->hdr.tkl = 0;
+    pkt->hdr.code = resource->method;
+    pkt->hdr.id = msgid;
+    pkt->numopts = 1;
     // set token
     if (tok) {
-        outpkt->hdr.tkl = tok->len;
-        outpkt->tok = *tok;
+        pkt->hdr.tkl = tok->len;
+        pkt->tok = *tok;
     }
     /*
      * NOTE: coap options MUST be in ascending order, i.e.,
@@ -156,28 +156,28 @@ int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
     // copy path to options, first
     int i;
     for (i=0; i < path->count; ++i) {
-        outpkt->opts[i].num = COAP_OPTION_URI_PATH;
-        outpkt->opts[i].buf.p = (const uint8_t *) path->elems[i];
-        outpkt->opts[i].buf.len = strlen(path->elems[i]);
+        pkt->opts[i].num = COAP_OPTION_URI_PATH;
+        pkt->opts[i].buf.p = (const uint8_t *) path->elems[i];
+        pkt->opts[i].buf.len = strlen(path->elems[i]);
     }
     // set content type, if present afterwards
     if (COAP_GET_CONTENTTYPE(resource->content_type, 2) != COAP_CONTENTTYPE_NONE) {
-        outpkt->opts[i].num = COAP_OPTION_CONTENT_FORMAT;
-        outpkt->opts[i].buf.p = resource->content_type;
-        outpkt->opts[i].buf.len = 2;
+        pkt->opts[i].num = COAP_OPTION_CONTENT_FORMAT;
+        pkt->opts[i].buf.p = resource->content_type;
+        pkt->opts[i].buf.len = 2;
     }
     // attach payload
-    outpkt->payload.p = content;
-    outpkt->payload.len = content_len;
+    pkt->payload.p = content;
+    pkt->payload.len = content_len;
     return COAP_SUCCESS;
 }
 
 int coap_make_ack(const uint16_t msgid, const coap_buffer_t* tok,
-                  coap_packet_t *outpkt)
+                  coap_packet_t *pkt)
 {
     return coap_make_response(msgid, tok,
                               COAP_TYPE_ACK, COAP_RSPCODE_EMPTY,
-                              NULL, NULL, 0, outpkt);
+                              NULL, NULL, 0, pkt);
 }
 
 int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,
@@ -185,34 +185,34 @@ int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,
                        const coap_responsecode_t rspcode,
                        const uint8_t *content_type,
                        const uint8_t *content, const size_t content_len,
-                       coap_packet_t *outpkt)
+                       coap_packet_t *pkt)
 {
-    outpkt->hdr.ver = 0x01;
-    outpkt->hdr.t = msgtype;
-    outpkt->hdr.tkl = 0;
-    outpkt->hdr.code = rspcode;
-    outpkt->hdr.id = msgid;
-    outpkt->numopts = 0;
+    pkt->hdr.ver = 0x01;
+    pkt->hdr.t = msgtype;
+    pkt->hdr.tkl = 0;
+    pkt->hdr.code = rspcode;
+    pkt->hdr.id = msgid;
+    pkt->numopts = 0;
     // need token in response
     if (tok) {
-        outpkt->hdr.tkl = tok->len;
-        outpkt->tok = *tok;
+        pkt->hdr.tkl = tok->len;
+        pkt->tok = *tok;
     }
     if (content_type) {
-        outpkt->numopts = 1;
+        pkt->numopts = 1;
         // safe because 1 < COAP_MAX_OPTIONS
-        outpkt->opts[0].num = COAP_OPTION_CONTENT_FORMAT;
-        outpkt->opts[0].buf.p = content_type;
-        outpkt->opts[0].buf.len = 2;
+        pkt->opts[0].num = COAP_OPTION_CONTENT_FORMAT;
+        pkt->opts[0].buf.p = content_type;
+        pkt->opts[0].buf.len = 2;
     }
-    outpkt->payload.p = content;
-    outpkt->payload.len = content_len;
+    pkt->payload.p = content;
+    pkt->payload.len = content_len;
     return COAP_SUCCESS;
 }
 
 int coap_handle_request(const coap_resource_t *resources,
                         const coap_packet_t *inpkt,
-                        coap_packet_t *outpkt)
+                        coap_packet_t *pkt)
 {
     uint8_t count;
     coap_responsecode_t rspcode = COAP_RSPCODE_NOT_IMPLEMENTED;
@@ -230,7 +230,7 @@ int coap_handle_request(const coap_resource_t *resources,
                 }
             }
             if (i == count) {
-                return ep->handler(ep, inpkt, outpkt);
+                return ep->handler(ep, inpkt, pkt);
             }
             rspcode = COAP_RSPCODE_NOT_FOUND;
         }
@@ -240,7 +240,7 @@ int coap_handle_request(const coap_resource_t *resources,
     }
     coap_make_response(inpkt->hdr.id, &inpkt->tok,
                        COAP_TYPE_ACK, rspcode,
-                       NULL, NULL, 0, outpkt);
+                       NULL, NULL, 0, pkt);
     return COAP_SUCCESS;
 }
 

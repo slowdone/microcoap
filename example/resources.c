@@ -20,7 +20,7 @@ static int handle_get_well_known_core(const coap_resource_t *resource,
 {
     printf("handle_get_well_known_core\n");
     return coap_make_response(inpkt->hdr.id, &inpkt->tok,
-                              COAP_RSPCODE_CONTENT,
+                              COAP_TYPE_ACK, COAP_RSPCODE_CONTENT,
                               resource->content_type,
                               (const uint8_t *)rsp, strlen(rsp),
                               outpkt);
@@ -33,7 +33,7 @@ static int handle_get_light(const coap_resource_t *resource,
 {
     printf("handle_get_light\n");
     return coap_make_response(inpkt->hdr.id, &inpkt->tok,
-                              COAP_RSPCODE_CONTENT,
+                              COAP_TYPE_ACK, COAP_RSPCODE_CONTENT,
                               resource->content_type,
                               (const uint8_t *)&light, 1,
                               outpkt);
@@ -46,9 +46,8 @@ static int handle_put_light(const coap_resource_t *resource,
     printf("handle_put_light\n");
     if (inpkt->payload.len == 0) {
         return coap_make_response(inpkt->hdr.id, &inpkt->tok,
-                                  COAP_RSPCODE_BAD_REQUEST,
-                                  COAP_CONTENTTYPE_NONE,
-                                  NULL, 0,
+                                  COAP_TYPE_ACK, COAP_RSPCODE_BAD_REQUEST,
+                                  NULL, NULL, 0,
                                   outpkt);
     }
     if (inpkt->payload.p[0] == '1') {
@@ -60,7 +59,7 @@ static int handle_put_light(const coap_resource_t *resource,
         printf("Light OFF\n");
     }
     return coap_make_response(inpkt->hdr.id, &inpkt->tok,
-                              COAP_RSPCODE_CHANGED,
+                              COAP_TYPE_ACK, COAP_RSPCODE_CHANGED,
                               resource->content_type,
                               (const uint8_t *)&light, 1,
                               outpkt);

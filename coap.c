@@ -172,24 +172,34 @@ int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
     return COAP_SUCCESS;
 }
 
+int coap_make_ack(const uint16_t msgid, const coap_buffer_t* tok,
+                  coap_packet_t *outpkt)
+{
+    return coap_make_response(msgid, tok,
+                              COAP_TYPE_ACK, COAP_RSPCODE_EMPTY,
+                              NULL, NULL, 0, outpkt);
+}
+
 int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,
+                       const coap_msgtype_t msgtype,
                        const coap_responsecode_t rspcode,
                        const uint8_t *content_type,
                        const uint8_t *content, const size_t content_len,
                        coap_packet_t *outpkt)
 {
     outpkt->hdr.ver = 0x01;
-    outpkt->hdr.t = COAP_TYPE_ACK;
+    outpkt->hdr.t = msgtype;
     outpkt->hdr.tkl = 0;
     outpkt->hdr.code = rspcode;
     outpkt->hdr.id = msgid;
-    outpkt->numopts = 1;
+    outpkt->numopts = 0;
     // need token in response
     if (tok) {
         outpkt->hdr.tkl = tok->len;
         outpkt->tok = *tok;
     }
     if (content_type) {
+        outpkt->numopts = 1;
         // safe because 1 < COAP_MAX_OPTIONS
         outpkt->opts[0].num = COAP_OPTION_CONTENT_FORMAT;
         outpkt->opts[0].buf.p = content_type;
@@ -223,7 +233,8 @@ int coap_handle_request(const coap_resource_t *resources,
             }
         }
     }
-    coap_make_response(inpkt->hdr.id, &inpkt->tok, COAP_RSPCODE_NOT_FOUND,
+    coap_make_response(inpkt->hdr.id, &inpkt->tok,
+                       COAP_TYPE_ACK, COAP_RSPCODE_NOT_FOUND,
                        NULL, NULL, 0, outpkt);
     return COAP_SUCCESS;
 }

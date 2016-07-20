@@ -68,9 +68,9 @@ static int handle_put_light(const coap_resource_t *resource,
 const coap_resource_t resources[] =
 {
     {COAP_METHOD_GET, handle_get_well_known_core, &path_well_known_core,
-        COAP_SET_CONTENTTYPE(COAP_CONTENTTYPE_APPLICATION_LINKFORMAT)},
+        COAP_SET_CONTENTTYPE(COAP_CONTENTTYPE_APP_LINKFORMAT)},
     {COAP_METHOD_GET, handle_get_light, &path_light,
-        COAP_SET_CONTENTTYPE(COAP_CONTENTTYPE_TEXT_PLAIN)},
+        COAP_SET_CONTENTTYPE(COAP_CONTENTTYPE_TXT_PLAIN)},
     {COAP_METHOD_PUT, handle_put_light, &path_light,
         COAP_SET_CONTENTTYPE(COAP_CONTENTTYPE_NONE)},
     {(coap_method_t)0, NULL, NULL,

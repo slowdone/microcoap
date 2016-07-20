@@ -8,8 +8,6 @@
 #include "coap.h"
 #include "coap_dump.h"
 
-#define PORT 5683
-
 extern void resource_setup(const coap_resource_t *resources);
 extern const coap_resource_t resources[];
 

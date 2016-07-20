@@ -19,16 +19,22 @@ extern "C" {
 #define COAP_MAX_OPTIONS 8      //!< Maximum number of options in a CoAP packet.
 #define COAP_MAX_TOKLEN 8       //!< Maximum token length, not enforced yet
 
-//http://tools.ietf.org/html/rfc7252#section-3
+/**
+ * The CoAP header definition, see http://tools.ietf.org/html/rfc7252#section-3
+ * and for status codes http://tools.ietf.org/html/rfc7252#section-12.1
+ */
 typedef struct coap_header
 {
     uint8_t ver;                //!< version number
     uint8_t t;                  //!< message type
     uint8_t tkl;                //!< token length
-    uint8_t code;               //!< status code, http://tools.ietf.org/html/rfc7252#section-12.1
+    uint8_t code;               //!< status code,
     uint16_t id;                //!< message ID
 } coap_header_t;
 
+/**
+ * Helper struct to map raw header in send/recv CoAP packets
+ */
 typedef union {
     uint8_t raw;
     struct {
@@ -40,24 +46,36 @@ typedef union {
     } hdr;
 } coap_raw_header_t;
 
+/**
+ * An immutable buffer container
+ */
 typedef struct coap_buffer
 {
     const uint8_t *p;       //!< byte array that holds some data, immutable
     size_t len;             //!< length of the array in p
 } coap_buffer_t;
 
+/**
+ * A mutable buffer container
+ */
 typedef struct coap_rw_buffer
 {
     uint8_t *p;             //!< byte array that holds some data, mutable
     size_t len;             //!< length of the array in p
 } coap_rw_buffer_t;
 
+/**
+ * CoAP option container
+ */
 typedef struct coap_option
 {
     uint8_t num;            //!< option number, http://tools.ietf.org/html/rfc7252#section-5.10
     coap_buffer_t buf;      //!< Option value
 } coap_option_t;
 
+/**
+ * CoAP packet container, including header, token, options, and payload
+ */
 typedef struct coap_packet
 {
     coap_header_t hdr;      //!< Header of the packet
@@ -69,7 +87,8 @@ typedef struct coap_packet
 
 /////////////////////////////////////////
 
-/*
+/**
+ * Definition of CoAP options types, for further information see:
  * COAP    - https://tools.ietf.org/html/rfc7252#section-12.2
  * Block   - https://tools.ietf.org/html/draft-ietf-core-block-20#section-6
  * Observe - https://tools.ietf.org/html/rfc7641#page-9
@@ -103,7 +122,10 @@ typedef enum
     COAP_OPTION_SIZE1           = 60,
 } coap_option_num_t;
 
-//http://tools.ietf.org/html/rfc7252#section-12.1.1
+/**
+ * Definition of CoAP methods
+ * see http://tools.ietf.org/html/rfc7252#section-12.1.1
+ */
 typedef enum
 {
     COAP_METHOD_GET             = 1,
@@ -112,7 +134,10 @@ typedef enum
     COAP_METHOD_DELETE          = 4,
 } coap_method_t;
 
-//http://tools.ietf.org/html/rfc7252#section-12.1.1
+/**
+ * Definition of CoAP message types
+ * see http://tools.ietf.org/html/rfc7252#section-12.1.1
+ */
 typedef enum
 {
     COAP_TYPE_CON               = 0,    //!< confirmable message
@@ -122,9 +147,8 @@ typedef enum
 } coap_msgtype_t;
 
 /*
- * @brief COAP response codes
- *
- * for further details see following (upcoming) standard documents
+ * Definition of COAP response codes, for further details see following
+ * (upcoming) standard documents:
  * https://tools.ietf.org/html/rfc7252#section-5.2
  * https://tools.ietf.org/html/rfc7252#section-12.1.2
  * https://tools.ietf.org/html/draft-ietf-core-block-20#section-6
@@ -163,7 +187,10 @@ typedef enum
     COAP_RSPCODE_NO_PROXY_SUPPORT           = MAKE_RSPCODE(5, 5),
 } coap_responsecode_t;
 
-//http://tools.ietf.org/html/rfc7252#section-12.3
+/**
+ * Definition of CoAP content types,
+ * see http://tools.ietf.org/html/rfc7252#section-12.3
+ */
 typedef enum
 {
     COAP_CONTENTTYPE_NONE                   = -1, // allow empty payload
@@ -177,6 +204,9 @@ typedef enum
 
 ///////////////////////
 
+/**
+ * Definition of (internal) error codes
+ */
 typedef enum
 {
     COAP_ERR_NONE                           = 0,
@@ -204,8 +234,8 @@ typedef enum
  */
 typedef struct coap_resource_path
 {
-    int count;                          //!< number of elements
-    const char *elems[COAP_MAX_SEGMENTS];    //!< resource path elements
+    int count;                              //!< number of elements
+    const char *elems[COAP_MAX_SEGMENTS];   //!< resource path elements
 } coap_resource_path_t;
 
 typedef struct coap_resource coap_resource_t;
@@ -346,9 +376,10 @@ int coap_handle_packet();
 /**
  * @brief Create link format of resources
  *
- * @param[in] resources Array of coap_resource_t
- * @param[out] buf Pointer of string buffer to store resource link format string
- * @param[in/out] buflen Initial Length of string buffer, and on return
+ * @param[in] resources Array describing all available coap_resource_t
+ * @param[out] buf Char buffer to which resource link format will be written to.
+ * @param[in,out] buflen Contains the initial size of \p buf, then stores how
+ * many bytes have been written to \p buf.
  *
  * @return 0 on success, or COAP_ERR_BUFFER_TOO_SMALL if buflen is exceeded.
  */

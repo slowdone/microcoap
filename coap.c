@@ -158,8 +158,8 @@ int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
     int i;
     for (i=0; i < path->count; ++i) {
         pkt->opts[i].num = COAP_OPTION_URI_PATH;
-        pkt->opts[i].buf.p = (const uint8_t *) path->elems[i];
-        pkt->opts[i].buf.len = strlen(path->elems[i]);
+        pkt->opts[i].buf.p = (const uint8_t *) path->items[i];
+        pkt->opts[i].buf.len = strlen(path->items[i]);
     }
     // set content type, if present afterwards
     if (COAP_GET_CONTENTTYPE(resource->content_type, 2) != COAP_CONTENTTYPE_NONE) {
@@ -223,10 +223,10 @@ int coap_handle_request(const coap_resource_t *resources,
         if ((ep->method == inpkt->hdr.code) && (count == ep->path->count)){
             int i;
             for (i = 0; i < count; ++i) {
-                if (opt[i].buf.len != strlen(ep->path->elems[i])) {
+                if (opt[i].buf.len != strlen(ep->path->items[i])) {
                     break;
                 }
-                if (memcmp(ep->path->elems[i], opt[i].buf.p, opt[i].buf.len)) {
+                if (memcmp(ep->path->items[i], opt[i].buf.p, opt[i].buf.len)) {
                     break;
                 }
             }
@@ -272,8 +272,8 @@ int coap_make_link_format(const coap_resource_t *resources,
             strncat(buf, "/", len);
             len--;
 
-            strncat(buf, ep->path->elems[i], len);
-            len -= strlen(ep->path->elems[i]);
+            strncat(buf, ep->path->items[i], len);
+            len -= strlen(ep->path->items[i]);
         }
         // insert >; after path
         strncat(buf, ">;", len);

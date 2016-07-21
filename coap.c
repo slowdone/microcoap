@@ -203,7 +203,7 @@ int coap_handle_request(const coap_resource_t *resources, size_t resources_len,
                         coap_packet_t *outpkt)
 {
     uint8_t count;
-    const coap_option_t *opt = _find_options(inpkt, COAP_OPTION_URI_PATH, &count);
+    const coap_option_t *opt = coap_find_uri_path(inpkt, &count);
     // find handler for requested resource
     for (size_t j = 0; (j < resources_len) && opt; ++j) {
         if ((resources[j].method == inpkt->hdr.code) && (count == resources[j].path->count)){
@@ -225,6 +225,12 @@ int coap_handle_request(const coap_resource_t *resources, size_t resources_len,
                        (const uint8_t[])COAP_SET_CONTENTTYPE(COAP_CONTENTTYPE_NONE),
                        NULL, 0, outpkt);
     return COAP_SUCCESS;
+}
+
+const coap_option_t *coap_find_uri_path(const coap_packet_t *pkt,
+                                          uint8_t *count)
+{
+    return _find_options(pkt, COAP_OPTION_URI_PATH, count);
 }
 
 int coap_build_resources(const coap_resource_t *resources, size_t resources_len,

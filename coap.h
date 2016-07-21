@@ -196,7 +196,7 @@ typedef int (*coap_resource_handler)(const coap_resource_t *resource,
                                      const coap_packet_t *inpkt,
                                      coap_packet_t *outpkt);
 
-#define MAX_SEGMENTS 2  // 2 = /foo/bar, 3 = /foo/bar/baz
+#define MAX_SEGMENTS 3  // 2 = /foo/bar, 3 = /foo/bar/baz
 typedef struct coap_resource_path
 {
     int count;
@@ -239,6 +239,8 @@ int coap_handle_request(const coap_resource_t *resources, size_t resources_len,
                         coap_packet_t *outpkt);
 int coap_handle_response();
 int coap_handle_packet();
+const coap_option_t *coap_find_uri_path(const coap_packet_t *pkt,
+                                          uint8_t *count);
 int coap_build_resources(const coap_resource_t *resources, size_t resources_len,
                          char *buf, size_t buflen);
 

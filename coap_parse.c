@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <arpa/inet.h>
 
 #include "coap.h"
 
@@ -26,7 +27,7 @@ static int _parse_header(const uint8_t *buf, const size_t buflen,
     hdr->t = r->hdr.t;
     hdr->tkl = r->hdr.tkl;
     hdr->code = r->hdr.code;
-    hdr->id = r->hdr.id;
+    hdr->id = ntohs(r->hdr.id);
     if (hdr->ver != 1) {
         return COAP_ERR_VERSION_NOT_1;
     }

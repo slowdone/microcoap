@@ -1,3 +1,4 @@
+#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -6,8 +7,6 @@
 
 #include "coap.h"
 #include "coap_dump.h"
-
-#define PORT 5683
 
 extern void resource_setup(const coap_resource_t *resources);
 extern const coap_resource_t resources[];
@@ -32,11 +31,11 @@ int main(void)
 #ifdef IPV6
     servaddr.sin6_family = AF_INET6;
     servaddr.sin6_addr = in6addr_any;
-    servaddr.sin6_port = htons(PORT);
+    servaddr.sin6_port = htons(COAP_DEFAULT_PORT);
 #else /* IPV6 */
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    servaddr.sin_port = htons(PORT);
+    servaddr.sin_port = htons(COAP_DEFAULT_PORT);
 #endif /* IPV6 */
     bind(fd,(struct sockaddr *)&servaddr, sizeof(servaddr));
 

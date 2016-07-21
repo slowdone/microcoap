@@ -4,8 +4,8 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stddef.h>
-#include <arpa/inet.h>
 
+#include "inet.h"
 #include "coap.h"
 
 /* --- PRIVATE -------------------------------------------------------------- */

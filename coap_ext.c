@@ -6,9 +6,10 @@ int coap_build_resource_path(coap_resource_path_t* resource_path, char* path)
 {
     // MAX_SEGMENTS defined at coap.h
     // be careful with real segments size, it must be less then MAX_SEGMENTS, otherwise it will returned not whole path
+    uint8_t max_segments = sizeof(resource_path->elems) / sizeof(const char*);
     char* pch = strtok (path, "/");
     uint8_t i = 0;
-    for ( ;(i < MAX_SEGMENTS) && (pch != NULL); ++i) {
+    for ( ;(i < max_segments) && (pch != NULL); ++i) {
         resource_path->elems[i] = pch;
         pch = strtok (NULL, "/");
     }

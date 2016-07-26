@@ -29,9 +29,9 @@ int coap_check_resource(const coap_resource_ext_t *resource,
                 if (memcmp(resource->path.elems[i], options[i].buf.p, options[i].buf.len)) {
                     return COAP_ERR_OPTION_NOT_FOUND;
                 }
+                return COAP_ERR_NONE;
             }
         }
-        return COAP_ERR_NONE;
     } 
     return COAP_ERR_OPTION_LEN_INVALID;
 }

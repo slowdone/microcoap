@@ -144,7 +144,7 @@ int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
     pkt->hdr.tkl = 0;
     pkt->hdr.code = resource->method;
     pkt->hdr.id = msgid;
-    pkt->numopts = 1;
+    pkt->numopts = path->count;
     // set token
     if (tok) {
         pkt->hdr.tkl = tok->len;
@@ -163,6 +163,7 @@ int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
     }
     // set content type, if present afterwards
     if (COAP_GET_CONTENTTYPE(resource->content_type, 2) != COAP_CONTENTTYPE_NONE) {
+        pkt->numopts++;
         pkt->opts[i].num = COAP_OPTION_CONTENT_FORMAT;
         pkt->opts[i].buf.p = resource->content_type;
         pkt->opts[i].buf.len = 2;

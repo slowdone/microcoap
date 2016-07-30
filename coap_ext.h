@@ -9,8 +9,8 @@ extern "C" {
 
 typedef struct coap_resource_ext
 {
-    coap_method_t method;         // POST, PUT or GET
-    coap_resource_path_t path;    // resource path, e.g. foo/bar/
+    coap_method_t method;          // POST, PUT or GET
+    coap_resource_path_t* path;    // resource path, e.g. foo/bar/
     uint8_t content_type[2];
 } coap_resource_ext_t;
 
@@ -18,6 +18,15 @@ inline void coap_set_content_type(coap_resource_ext_t *resource, coap_content_ty
 {
     resource->content_type[0] = ((int16_t)content_type & 0xFF00) >> 8;
     resource->content_type[1] = ((int16_t)content_type & 0x00FF);
+}
+
+inline coap_resource_t coap_convert_resource_ext(coap_resource_ext_t *resource) {
+    return (coap_resource_t) { resource->method, NULL, resource->path, 
+        COAP_SET_CONTENTTYPE(COAP_GET_CONTENTTYPE(resource->content_type, sizeof(resource->content_type)))};
+}
+
+inline coap_resource_t coap_make_request_resource(const coap_method_t method, const coap_resource_path_t* resource_path) {
+    return (coap_resource_t) { method, NULL, resource_path, COAP_SET_CONTENTTYPE(COAP_CONTENTTYPE_NONE) };
 }
 
 int coap_build_resource_path(coap_resource_path_t* resource_path, char* path);

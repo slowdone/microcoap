@@ -264,7 +264,7 @@ struct coap_resource
     const uint8_t content_type[2];      //!< content type of response
 };
 
-#define COAP_SET_CONTENTTYPE(ct)   {((int16_t)ct & 0xFF00) >> 8, ((int16_t)ct & 0x00FF)}
+#define COAP_SET_CONTENTTYPE(ct)   {(uint8_t)(((int16_t)ct & 0xFF00) >> 8), (uint8_t)(((int16_t)ct & 0x00FF))}
 
 inline int16_t COAP_GET_CONTENTTYPE(const uint8_t *buf, const size_t buflen)
 {

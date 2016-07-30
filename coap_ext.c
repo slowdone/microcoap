@@ -23,10 +23,10 @@ int coap_build_resource_path(coap_resource_path_t* resource_path, char* path)
 int coap_check_resource(const coap_resource_ext_t *resource,
                         const coap_option_t *options, uint8_t options_count)
 {
-    if (options_count == resource->path.count) {
+    if (options_count == resource->path->count) {
         for (uint8_t i = 0; i < options_count; ++i) {
-            if (strlen(resource->path.elems[i]) == options[i].buf.len) {
-                if (memcmp(resource->path.elems[i], options[i].buf.p, options[i].buf.len)) {
+            if (strlen(resource->path->elems[i]) == options[i].buf.len) {
+                if (memcmp(resource->path->elems[i], options[i].buf.p, options[i].buf.len)) {
                     return COAP_ERR_OPTION_NOT_FOUND;
                 }
                 return COAP_ERR_NONE;

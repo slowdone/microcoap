@@ -240,12 +240,12 @@ int coap_handle_request(const coap_resource_t *resources,
         }
     }
     return coap_make_response(inpkt->hdr.id, &inpkt->tok,
-                       COAP_TYPE_ACK, rspcode,
-                       NULL, NULL, 0, pkt);
+                              COAP_TYPE_ACK, rspcode,
+                              NULL, NULL, 0, pkt);
 }
 
 int coap_make_link_format(const coap_resource_t *resources,
-                         char *buf, size_t buflen)
+                          char *buf, size_t buflen)
 {
     if (buflen < 4) { // <>;
         return COAP_ERR_BUFFER_TOO_SMALL;

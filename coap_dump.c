@@ -30,6 +30,7 @@ static void _dump_options(const coap_option_t *opts, const size_t numopt)
         printf(" ]\n");
     }
 }
+
 /* --- PUBLIC --------------------------------------------------------------- */
 void coap_dump(const uint8_t *buf, size_t buflen, bool bare)
 {

@@ -14,13 +14,11 @@ void resource_setup(const coap_resource_t *resources)
 }
 
 static const coap_resource_path_t path_well_known_core = {2, {".well-known", "core"}};
-static int handle_get_well_known_core(const int state,
-                                      const coap_resource_t *resource,
+static int handle_get_well_known_core(const coap_resource_t *resource,
                                       const coap_packet_t *inpkt,
                                       coap_packet_t *pkt)
 {
     printf("handle_get_well_known_core\n");
-    (void) state;
     return coap_make_response(inpkt->hdr.id, &inpkt->tok,
                               COAP_TYPE_ACK, COAP_RSPCODE_CONTENT,
                               resource->content_type,
@@ -29,13 +27,11 @@ static int handle_get_well_known_core(const int state,
 }
 
 static const coap_resource_path_t path_light = {1, {"light"}};
-static int handle_get_light(const int state,
-                            const coap_resource_t *resource,
+static int handle_get_light(const coap_resource_t *resource,
                             const coap_packet_t *inpkt,
                             coap_packet_t *pkt)
 {
     printf("handle_get_light\n");
-    (void) state;
     return coap_make_response(inpkt->hdr.id, &inpkt->tok,
                               COAP_TYPE_ACK, COAP_RSPCODE_CONTENT,
                               resource->content_type,
@@ -43,13 +39,11 @@ static int handle_get_light(const int state,
                               pkt);
 }
 
-static int handle_put_light(const int state,
-                            const coap_resource_t *resource,
+static int handle_put_light(const coap_resource_t *resource,
                             const coap_packet_t *inpkt,
                             coap_packet_t *pkt)
 {
     printf("handle_put_light\n");
-    (void) state;
     if (inpkt->payload.len == 0) {
         return coap_make_response(inpkt->hdr.id, &inpkt->tok,
                                   COAP_TYPE_ACK, COAP_RSPCODE_BAD_REQUEST,
@@ -71,14 +65,18 @@ static int handle_put_light(const int state,
                               pkt);
 }
 
-const coap_resource_t resources[] =
+coap_resource_t resources[] =
 {
-    {COAP_METHOD_GET, handle_get_well_known_core, &path_well_known_core,
+    {COAP_STATE_RDY, COAP_METHOD_GET, COAP_TYPE_ACK,
+        handle_get_well_known_core, &path_well_known_core,
         COAP_SET_CONTENTTYPE(COAP_CONTENTTYPE_APP_LINKFORMAT)},
-    {COAP_METHOD_GET, handle_get_light, &path_light,
+    {COAP_STATE_RDY, COAP_METHOD_GET, COAP_TYPE_ACK,
+        handle_get_light, &path_light,
         COAP_SET_CONTENTTYPE(COAP_CONTENTTYPE_TXT_PLAIN)},
-    {COAP_METHOD_PUT, handle_put_light, &path_light,
+    {COAP_STATE_RDY, COAP_METHOD_PUT, COAP_TYPE_ACK,
+        handle_put_light, &path_light,
         COAP_SET_CONTENTTYPE(COAP_CONTENTTYPE_NONE)},
-    {(coap_method_t)0, NULL, NULL,
+    {(coap_state_t)0, (coap_method_t)0, (coap_msgtype_t)0,
+        NULL, NULL,
         COAP_SET_CONTENTTYPE(COAP_CONTENTTYPE_NONE)}
 };

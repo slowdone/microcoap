@@ -9,7 +9,7 @@
 #include "coap_dump.h"
 
 extern void resource_setup(const coap_resource_t *resources);
-extern const coap_resource_t resources[];
+extern coap_resource_t resources[];
 
 int main(void)
 {
@@ -63,7 +63,7 @@ int main(void)
 #ifdef MICROCOAP_DEBUG
             coap_dump_packet(&pkt);
 #endif
-            coap_handle_request(COAP_STATE_RSP_PENDING, resources, &pkt, &rsppkt);
+            coap_handle_request(resources, &pkt, &rsppkt);
 
             if (0 != (rc = coap_build(&rsppkt, buf, &buflen)))
                 printf("coap_build failed rc=%d\n", rc);

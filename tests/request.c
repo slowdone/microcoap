@@ -41,7 +41,6 @@ int main(int argc, char *argv[])
 {
     int fd;
     struct addrinfo hints, *dstinfo, *p;
-    struct sockaddr_storage cliaddr;
     int rv;
 
     if (argc != 2) {
@@ -70,9 +69,10 @@ int main(int argc, char *argv[])
     }
 
     int n, rc;
+    struct sockaddr_storage cliaddr;
     socklen_t len = sizeof(cliaddr);
     coap_packet_t req, rsp;
-    uint16_t msgid = 1;
+    uint16_t msgid = 42;
     printf(" + coap_make_request\n");
     coap_make_request(msgid, NULL, &resources[0], NULL, 0, &req);
     uint8_t buf[1024];

@@ -94,8 +94,7 @@ int main(void)
             printf("Bad packet rc=%d\n", rc);
         }
         else {
-            int state = 0;
-            do {
+            for (int state = 0; state != COAP_STATE_RSP; ) {
                 size_t buflen = sizeof(buf);
                 coap_packet_t rsppkt;
                 state = coap_handle_request(resources, &pkt, &rsppkt);
@@ -107,7 +106,7 @@ int main(void)
                 else {
                     sendto(fd, buf, buflen, 0, (struct sockaddr *)&cliaddr, sizeof(cliaddr));
                 }
-            } while (state != COAP_STATE_RSP);
+            }
         }
     }
 }

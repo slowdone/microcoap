@@ -1,17 +1,18 @@
-CFLAGS += -std=c99 -Wall -Wextra -Werror -O2 -I.
-# -DIPV6
-DIRS = example
-SRC = coap.c coap_dump.c coap_parse.c example/resources.c example/main.c
+CFLAGS += -fPIC -std=c99 -Wall -Wextra -Werror -O2 -I.
+LDFLAGS = -shared
+DIRS = example tests
+SRC = coap.c coap_dump.c coap_parse.c
 OBJ = $(SRC:%.c=%.o)
 DEPS = $(SRC:%.c=%.d)
-EXEC = coap
+TARGET_LIB = libmicrocoap.so # target lib
 
-all: $(EXEC)
+.PHONY: all
+all: ${TARGET_LIB}
 
 -include $(DEPS)
 
-$(EXEC): $(OBJ)
-	@$(CC) $(CFLAGS) -o $@ $^
+$(TARGET_LIB): $(OBJ)
+	$(CC) ${LDFLAGS} -o $@ $^
 
 %.o: %.c %.d
 	@$(CC) -c $(CFLAGS) -o $@ $<
@@ -20,4 +21,4 @@ $(EXEC): $(OBJ)
 	@$(CC) -MM $(CFLAGS) $< > $@
 
 clean:
-	@$(RM) $(EXEC) $(OBJ) $(DEPS)
+	@$(RM) $(TARGET_LIB) $(OBJ) $(DEPS)

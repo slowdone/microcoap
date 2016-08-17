@@ -20,6 +20,9 @@ static int handle_get_well_known_core(const coap_resource_t *resource,
                                       const coap_packet_t *reqpkt,
                                       coap_packet_t *rsppkt)
 {
+
+    (void) resource;
+    (void) reqpkt;
     printf("handle_get_well_known_core\n");
     printf("%.*s\n", (int)rsppkt->payload.len, (char *)rsppkt->payload.p);
     return COAP_STATE_REQ;

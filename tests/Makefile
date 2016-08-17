@@ -1,14 +1,23 @@
 CFLAGS += -std=c99 -Wall -Wextra -Werror -O2 -I../.
-SRC = ../coap.c ../coap_parse.c piggyback.c
-OBJ = $(SRC:%.c=%.o)
-DEPS = $(SRC:%.c=%.d)
-EXEC = piggyback
 
-all: $(EXEC)
+PBSRC = ../coap.c ../coap_parse.c piggyback.c
+PBOBJ = $(PBSRC:%.c=%.o)
+PBDEPS = $(PBSRC:%.c=%.d)
+PBEXEC = piggyback
+
+RQSRC = ../coap.c ../coap_parse.c request.c
+RQOBJ = $(RQSRC:%.c=%.o)
+RQDEPS = $(RQSRC:%.c=%.d)
+RQEXEC = request
+
+all: $(PBEXEC) $(RQEXEC)
 
 -include $(DEPS)
 
-$(EXEC): $(OBJ)
+$(PBEXEC): $(PBOBJ)
+	@$(CC) $(CFLAGS) -o $@ $^
+
+$(RQEXEC): $(RQOBJ)
 	@$(CC) $(CFLAGS) -o $@ $^
 
 %.o: %.c %.d
@@ -18,4 +27,4 @@ $(EXEC): $(OBJ)
 	@$(CC) -MM $(CFLAGS) $< > $@
 
 clean:
-	@$(RM) $(EXEC) $(OBJ) $(DEPS)
+	@$(RM) $(PBEXEC) $(RQEXEC) $(PBOBJ) $(RQOBJ) $(PBDEPS) $(RQDEPS)

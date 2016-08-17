@@ -222,6 +222,10 @@ typedef enum
     COAP_ERR_UNSUPPORTED                    = 10,
     COAP_ERR_OPTION_DELTA_INVALID           = 11,
     COAP_ERR_OPTION_NOT_FOUND               = 12,
+    COAP_ERR_REQUEST_NOT_FOUND,
+    COAP_ERR_REQUEST_MSGID_MISMATCH,
+    COAP_ERR_REQUEST_TOKEN_MISMATCH,
+    COAP_ERR_RESPONSE,
     COAP_ERR_MAX                            = 99,
 } coap_error_t;
 #define COAP_SUCCESS COAP_ERR_NONE  //!< Success return value if no error occured
@@ -230,6 +234,7 @@ typedef enum {
     COAP_STATE_RDY                         = (COAP_ERR_MAX + 1),
     COAP_STATE_ACK,
     COAP_STATE_RSP,
+    COAP_STATE_REQ,
 } coap_state_t;
 
 
@@ -396,7 +401,9 @@ int coap_handle_request(coap_resource_t *resources,
                         const coap_packet_t *inpkt,
                         coap_packet_t *pkt);
 
-int coap_handle_response();
+int coap_handle_response(coap_resource_t *resources,
+                        const coap_packet_t *reqpkt,
+                        coap_packet_t *rsppkt);
 int coap_handle_packet();
 
 /**

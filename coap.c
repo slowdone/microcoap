@@ -151,7 +151,7 @@ int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
     pkt->hdr.tkl = 0;
     pkt->hdr.code = resource->method;
     pkt->hdr.id = msgid;
-    pkt->numopts = 1;
+    pkt->numopts = 0;
     // set token
     if (tok) {
         pkt->hdr.tkl = tok->len;
@@ -167,12 +167,14 @@ int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
         pkt->opts[i].num = COAP_OPTION_URI_PATH;
         pkt->opts[i].buf.p = (const uint8_t *) path->items[i];
         pkt->opts[i].buf.len = strlen(path->items[i]);
+        pkt->numopts++;
     }
     // set content type, if present afterwards
     if (COAP_GET_CONTENTTYPE(resource->content_type, 2) != COAP_CONTENTTYPE_NONE) {
         pkt->opts[i].num = COAP_OPTION_CONTENT_FORMAT;
         pkt->opts[i].buf.p = resource->content_type;
         pkt->opts[i].buf.len = 2;
+        pkt->numopts++;
     }
     // attach payload
     pkt->payload.p = content;
@@ -257,6 +259,40 @@ int coap_handle_request(coap_resource_t *resources,
     return coap_make_response(inpkt->hdr.id, &inpkt->tok,
                               COAP_TYPE_ACK, rspcode,
                               NULL, NULL, 0, pkt);
+}
+
+int coap_handle_response(coap_resource_t *resources,
+                         const coap_packet_t *reqpkt,
+                         coap_packet_t *rsppkt)
+{
+    if (reqpkt->hdr.id  != rsppkt->hdr.id )
+        return COAP_ERR_REQUEST_MSGID_MISMATCH;
+    if (reqpkt->hdr.tkl != rsppkt->hdr.tkl)
+        return COAP_ERR_REQUEST_TOKEN_MISMATCH;
+    else if (memcmp(reqpkt->tok.p, rsppkt->tok.p, reqpkt->tok.len) != 0)
+        return COAP_ERR_REQUEST_TOKEN_MISMATCH;
+    if (rsppkt->hdr.code >= COAP_RSPCODE_BAD_REQUEST)
+        return COAP_ERR_RESPONSE;
+    uint8_t count;
+    const coap_option_t *opt = _find_options(reqpkt, COAP_OPTION_URI_PATH, &count);
+    // find handler for requested resource
+    for (coap_resource_t *rs = resources; rs->handler && opt; ++rs) {
+        if (count == rs->path->count) {
+            int i;
+            for (i = 0; i < count; ++i) {
+                if (opt[i].buf.len != strlen(rs->path->items[i])) {
+                    break;
+                }
+                if (memcmp(rs->path->items[i], opt[i].buf.p, opt[i].buf.len)) {
+                    break;
+                }
+            }
+            if (i == count) { // matching resource found
+                return rs->handler(rs, reqpkt, rsppkt);
+            }
+        }
+    }
+    return COAP_ERR_REQUEST_NOT_FOUND;
 }
 
 int coap_make_link_format(const coap_resource_t *resources,

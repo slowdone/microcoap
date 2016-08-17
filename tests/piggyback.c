@@ -6,7 +6,6 @@
 #include <strings.h>
 
 #include "coap.h"
-#include "coap_dump.h"
 
 const uint16_t rsplen = 128;
 static char rsp[128] = "";
@@ -109,4 +108,5 @@ int main(void)
             }
         }
     }
+    return 0;
 }

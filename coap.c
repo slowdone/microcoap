@@ -242,7 +242,7 @@ int coap_handle_request(coap_resource_t *resources,
                 }
             }
             if (i == count) { // matching resource found
-                if ((rs->msg_type != COAP_TYPE_ACK) && (rs->state != COAP_STATE_ACK)) { // no piggyback
+                if ((inpkt->hdr.t == COAP_TYPE_CON) && (rs->msg_type != COAP_TYPE_ACK) && (rs->state != COAP_STATE_ACK)) { // no piggyback
                     rs->state = coap_make_ack(inpkt, pkt);
                 }
                 else {

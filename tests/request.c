@@ -12,7 +12,6 @@
 
 #include "coap.h"
 
-#define DSTADDR     "::1"
 #define DSTPORT     "5683"
 
 static const coap_resource_path_t path_well_known_core = {2, {".well-known", "core"}};
@@ -38,18 +37,22 @@ coap_resource_t resources[] =
         COAP_SET_CONTENTTYPE(COAP_CONTENTTYPE_NONE)}
 };
 
-int main(void)
+int main(int argc, char *argv[])
 {
     int fd;
     struct addrinfo hints, *dstinfo, *p;
     struct sockaddr_storage cliaddr;
     int rv;
 
+    if (argc != 2) {
+        fprintf(stderr, "USAGE: %s hostname\n", argv[0]);
+        return 1;
+    }
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_DGRAM;
 
-    if ((rv = getaddrinfo(DSTADDR, DSTPORT, &hints, &dstinfo)) != 0) {
+    if ((rv = getaddrinfo(argv[1], DSTPORT, &hints, &dstinfo)) != 0) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
         return 1;
     }

@@ -13,6 +13,8 @@ extern "C" {
 #include <stdbool.h>
 #include <stddef.h>
 
+#define COAP_VERSION    (0x01)  //!< The CoAP protocol version used
+
 #define COAP_DEFAULT_PORT 5683  //!< The port number used by the CoAP protocol.
 #define COAPS_DEFAULT_PORT 5684 //!< The port number used by the CoAPs protocol.
 

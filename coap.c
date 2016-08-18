@@ -146,7 +146,7 @@ int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
     if ((path->count + 1) > COAP_MAX_OPTIONS)
         return COAP_ERR_BUFFER_TOO_SMALL;
     // init request header
-    pkt->hdr.ver = 0x01;
+    pkt->hdr.ver = COAP_VERSION;
     pkt->hdr.t = msg_type;
     pkt->hdr.tkl = 0;
     pkt->hdr.code = resource->method;
@@ -197,7 +197,7 @@ int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,
                        const uint8_t *content, const size_t content_len,
                        coap_packet_t *pkt)
 {
-    pkt->hdr.ver = 0x01;
+    pkt->hdr.ver = COAP_VERSION;
     pkt->hdr.t = msgtype;
     pkt->hdr.tkl = 0;
     pkt->hdr.code = rspcode;

@@ -88,7 +88,8 @@ int main(void)
         coap_packet_t pkt;
 
         n = recvfrom(fd, buf, sizeof(buf), 0, (struct sockaddr *)&cliaddr, &len);
-
+        printf("received message of %d bytes\n", n);
+        
         if (0 != (rc = coap_parse(buf, n, &pkt))) {
             printf("Bad packet rc=%d\n", rc);
         }
@@ -103,6 +104,7 @@ int main(void)
                     break;
                 }
                 else {
+                    printf("send response\n");
                     sendto(fd, buf, buflen, 0, (struct sockaddr *)&cliaddr, sizeof(cliaddr));
                 }
             }

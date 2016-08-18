@@ -31,7 +31,7 @@ static int handle_request_put_response(const coap_resource_t *resource,
 
 coap_resource_t resources[] =
 {
-    {COAP_STATE_RDY, COAP_METHOD_PUT, COAP_TYPE_NONCON,
+    {COAP_STATE_RDY, COAP_METHOD_PUT, COAP_TYPE_CON,
         handle_request_put_response, NULL,
         COAP_SET_CONTENTTYPE(COAP_CONTENTTYPE_TXT_PLAIN)},
     {(coap_state_t)0, (coap_method_t)0, (coap_msgtype_t)0,

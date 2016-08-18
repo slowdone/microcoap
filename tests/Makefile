@@ -5,19 +5,27 @@ PBOBJ = $(PBSRC:%.c=%.o)
 PBDEPS = $(PBSRC:%.c=%.d)
 PBEXEC = piggyback
 
-RQSRC = ../coap.c ../coap_parse.c request.c
-RQOBJ = $(RQSRC:%.c=%.o)
-RQDEPS = $(RQSRC:%.c=%.d)
-RQEXEC = request
+GETSRC = ../coap.c ../coap_parse.c request_get.c
+GETOBJ = $(GETSRC:%.c=%.o)
+GETDEPS = $(GETSRC:%.c=%.d)
+GETEXEC = request_get
 
-all: $(PBEXEC) $(RQEXEC)
+PUTSRC = ../coap.c ../coap_parse.c request_put.c
+PUTOBJ = $(PUTSRC:%.c=%.o)
+PUTDEPS = $(PUTSRC:%.c=%.d)
+PUTEXEC = request_put
+
+all: $(PBEXEC) $(GETEXEC) $(PUTEXEC)
 
 -include $(DEPS)
 
 $(PBEXEC): $(PBOBJ)
 	@$(CC) $(CFLAGS) -o $@ $^
 
-$(RQEXEC): $(RQOBJ)
+$(GETEXEC): $(GETOBJ)
+	@$(CC) $(CFLAGS) -o $@ $^
+
+$(PUTEXEC): $(PUTOBJ)
 	@$(CC) $(CFLAGS) -o $@ $^
 
 %.o: %.c %.d
@@ -27,4 +35,4 @@ $(RQEXEC): $(RQOBJ)
 	@$(CC) -MM $(CFLAGS) $< > $@
 
 clean:
-	@$(RM) $(PBEXEC) $(RQEXEC) $(PBOBJ) $(RQOBJ) $(PBDEPS) $(RQDEPS)
+	@$(RM) $(PBEXEC) $(GETEXEC) $(PUTEXEC) $(PBOBJ) $(GETOBJ) $(PUTOBJ) $(PBDEPS) $(PUTDEPS) $(GETDEPS)

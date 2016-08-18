@@ -218,8 +218,8 @@ int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,
     pkt->payload.p = content;
     pkt->payload.len = content_len;
     if ((msgtype == COAP_TYPE_ACK) && (rspcode == COAP_RSPCODE_EMPTY))
-        return COAP_STATE_ACK;
-    return COAP_STATE_RSP;
+        return COAP_STATE_ACK_SEND;
+    return COAP_STATE_RSP_SEND;
 }
 
 int coap_handle_request(coap_resource_t *resources,
@@ -242,7 +242,7 @@ int coap_handle_request(coap_resource_t *resources,
                 }
             }
             if (i == count) { // matching resource found
-                if ((inpkt->hdr.t == COAP_TYPE_CON) && (rs->msg_type != COAP_TYPE_ACK) && (rs->state != COAP_STATE_ACK)) { // no piggyback
+                if ((inpkt->hdr.t == COAP_TYPE_CON) && (rs->msg_type != COAP_TYPE_ACK) && (rs->state != COAP_STATE_ACK_SEND)) { // no piggyback
                     rs->state = coap_make_ack(inpkt, pkt);
                 }
                 else {

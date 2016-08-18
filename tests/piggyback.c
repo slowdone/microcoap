@@ -93,7 +93,7 @@ int main(void)
             printf("Bad packet rc=%d\n", rc);
         }
         else {
-            for (int state = 0; state != COAP_STATE_RSP; ) {
+            for (int state = COAP_STATE_RSP_WAIT; state != COAP_STATE_RSP_SEND; ) {
                 size_t buflen = sizeof(buf);
                 coap_packet_t rsppkt;
                 state = coap_handle_request(resources, &pkt, &rsppkt);

@@ -231,10 +231,16 @@ typedef enum
 #define COAP_SUCCESS COAP_ERR_NONE  //!< Success return value if no error occured
 
 typedef enum {
-    COAP_STATE_RDY                         = (COAP_ERR_MAX + 1),
-    COAP_STATE_ACK,
-    COAP_STATE_RSP,
-    COAP_STATE_REQ,
+    COAP_STATE_RDY                          = (COAP_ERR_MAX + 1),
+    COAP_STATE_ACK_RECV,
+    COAP_STATE_ACK_SEND,
+    COAP_STATE_ACK_WAIT,
+    COAP_STATE_RSP_RECV,
+    COAP_STATE_RSP_SEND,
+    COAP_STATE_RSP_WAIT,
+    COAP_STATE_REQ_RECV,
+    COAP_STATE_REQ_SEND,
+    COAP_STATE_REQ_WAIT,
 } coap_state_t;
 
 

@@ -14,24 +14,26 @@
 
 #define DSTPORT     "5683"
 
-static const coap_resource_path_t path_well_known_core = {2, {".well-known", "core"}};
-static int handle_get_well_known_core(const coap_resource_t *resource,
-                                      const coap_packet_t *reqpkt,
-                                      coap_packet_t *rsppkt)
+static int handle_request_put_response(const coap_resource_t *resource,
+                                       const coap_packet_t *reqpkt,
+                                       coap_packet_t *rsppkt)
 {
 
     (void) resource;
     (void) reqpkt;
-    printf("handle_get_well_known_core\n");
-    printf("%.*s\n", (int)rsppkt->payload.len, (char *)rsppkt->payload.p);
-    return COAP_STATE_REQ;
+    printf(" + handle_request_put_response\n");
+    if (rsppkt->hdr.t == COAP_TYPE_ACK) {
+        printf(" +++ ACK\n");
+        return COAP_STATE_RDY;
+    }
+    return COAP_STATE_ACK_WAIT;
 }
 
 coap_resource_t resources[] =
 {
-    {COAP_STATE_RDY, COAP_METHOD_GET, COAP_TYPE_ACK,
-        handle_get_well_known_core, &path_well_known_core,
-        COAP_SET_CONTENTTYPE(COAP_CONTENTTYPE_APP_LINKFORMAT)},
+    {COAP_STATE_RDY, COAP_METHOD_PUT, COAP_TYPE_NONCON,
+        handle_request_put_response, NULL,
+        COAP_SET_CONTENTTYPE(COAP_CONTENTTYPE_TXT_PLAIN)},
     {(coap_state_t)0, (coap_method_t)0, (coap_msgtype_t)0,
         NULL, NULL,
         COAP_SET_CONTENTTYPE(COAP_CONTENTTYPE_NONE)}
@@ -43,10 +45,26 @@ int main(int argc, char *argv[])
     struct addrinfo hints, *dstinfo, *p;
     int rv;
 
-    if (argc != 2) {
-        fprintf(stderr, "USAGE: %s hostname\n", argv[0]);
+    if (argc != 4) {
+        fprintf(stderr, "USAGE: %s hostname path content\n", argv[0]);
         return 1;
     }
+
+    coap_resource_path_t path_request_put;
+    path_request_put.count = 1;
+    path_request_put.items[0] = &argv[2][0];
+    for (size_t c = 0; c < strlen(argv[2]); ++c) {
+        if (argv[2][c] == '/')
+            ++path_request_put.count;
+        if (path_request_put.count > COAP_MAX_PATHITEMS) {
+            fprintf(stderr, "path has to many elements: %d\n", path_request_put.count);
+            return 1;
+        }
+        path_request_put.items[path_request_put.count] = &argv[2][c+1];
+    }
+
+    resources[0].path = &path_request_put;
+
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_DGRAM;
@@ -74,7 +92,7 @@ int main(int argc, char *argv[])
     coap_packet_t req, rsp;
     uint16_t msgid = 42;
     printf(" + coap_make_request\n");
-    coap_make_request(msgid, NULL, &resources[0], NULL, 0, &req);
+    coap_make_request(msgid, NULL, &resources[0], (uint8_t *)argv[3], strlen(argv[3]), &req);
     uint8_t buf[1024];
     size_t buflen = sizeof(buf);
     if (0 != (rc = coap_build(&req, buf, &buflen))) {
@@ -88,7 +106,7 @@ int main(int argc, char *argv[])
             return 1;
         }
         printf(" + wait for response ...\n");
-        for (int state = 0; state != COAP_STATE_REQ; ) {
+        for (int state = COAP_STATE_ACK_WAIT; state != COAP_STATE_RDY; ) {
             n = recvfrom(fd, buf, sizeof(buf), 0, (struct sockaddr *)&cliaddr, &len);
             printf(" +++ received message of %d bytes\n", n);
             if (0 != (rc = coap_parse(buf, n, &rsp))) {

@@ -23,7 +23,7 @@ static int handle_get_well_known_core(const coap_resource_t *resource,
     (void) resource;
     (void) reqpkt;
     printf("handle_get_well_known_core\n");
-    printf("%.*s\n", (int)rsppkt->payload.len, (char *)rsppkt->payload.p);
+    printf("  content: %.*s\n", (int)rsppkt->payload.len, (char *)rsppkt->payload.p);
     return COAP_STATE_RDY;
 }
 
@@ -82,15 +82,15 @@ int main(int argc, char *argv[])
         return 1;
     }
     else {
-        printf(" + send request\n");
+        printf("send request\n");
         if ((n = sendto(fd, buf, buflen, 0, p->ai_addr, p->ai_addrlen)) == -1) {
             perror("sendto");
             return 1;
         }
-        printf(" + wait for response ...\n");
+        printf("wait for response ...\n");
         for (int state = COAP_STATE_RSP_WAIT; state != COAP_STATE_RDY; ) {
             n = recvfrom(fd, buf, sizeof(buf), 0, (struct sockaddr *)&cliaddr, &len);
-            printf(" +++ received message of %d bytes\n", n);
+            printf("received message of %d bytes\n", n);
             if (0 != (rc = coap_parse(buf, n, &rsp))) {
                 printf("Bad packet rc=%d\n", rc);
                 return 1;

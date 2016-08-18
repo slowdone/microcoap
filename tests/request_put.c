@@ -21,11 +21,12 @@ static int handle_request_put_response(const coap_resource_t *resource,
 
     (void) resource;
     (void) reqpkt;
-    printf(" + handle_request_put_response\n");
+    printf("handle_request_put_response\n");
     if (rsppkt->hdr.t == COAP_TYPE_ACK) {
-        printf(" +++ ACK\n");
+        printf("  ACK\n");
         return COAP_STATE_RDY;
     }
+    printf("  INVALID\n");
     return COAP_STATE_ACK_WAIT;
 }
 
@@ -91,7 +92,7 @@ int main(int argc, char *argv[])
     socklen_t len = sizeof(cliaddr);
     coap_packet_t req, rsp;
     uint16_t msgid = 42;
-    printf(" + coap_make_request\n");
+    printf("coap_make_request\n");
     coap_make_request(msgid, NULL, &resources[0], (uint8_t *)argv[3], strlen(argv[3]), &req);
     uint8_t buf[1024];
     size_t buflen = sizeof(buf);
@@ -100,15 +101,15 @@ int main(int argc, char *argv[])
         return 1;
     }
     else {
-        printf(" + send request\n");
+        printf("send request\n");
         if ((n = sendto(fd, buf, buflen, 0, p->ai_addr, p->ai_addrlen)) == -1) {
             perror("sendto");
             return 1;
         }
-        printf(" + wait for response ...\n");
+        printf("wait for response ...\n");
         for (int state = COAP_STATE_ACK_WAIT; state != COAP_STATE_RDY; ) {
             n = recvfrom(fd, buf, sizeof(buf), 0, (struct sockaddr *)&cliaddr, &len);
-            printf(" +++ received message of %d bytes\n", n);
+            printf("received message of %d bytes\n", n);
             if (0 != (rc = coap_parse(buf, n, &rsp))) {
                 printf("Bad packet rc=%d\n", rc);
                 return 1;

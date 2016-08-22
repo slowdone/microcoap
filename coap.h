@@ -13,6 +13,8 @@ extern "C" {
 #include <stdbool.h>
 #include <stddef.h>
 
+#define COAP_VERSION    (0x01)  //!< The CoAP protocol version used
+
 #define COAP_DEFAULT_PORT 5683  //!< The port number used by the CoAP protocol.
 #define COAPS_DEFAULT_PORT 5684 //!< The port number used by the CoAPs protocol.
 
@@ -146,6 +148,7 @@ typedef enum
     COAP_TYPE_RESET             = 3,    //!< reset message
 } coap_msgtype_t;
 
+#define MAKE_RSPCODE(clas, det) ((clas << 5) | (det))   //!< Set CoAP response code
 /*
  * Definition of COAP response codes, for further details see following
  * (upcoming) standard documents:
@@ -153,7 +156,6 @@ typedef enum
  * https://tools.ietf.org/html/rfc7252#section-12.1.2
  * https://tools.ietf.org/html/draft-ietf-core-block-20#section-6
  */
-#define MAKE_RSPCODE(clas, det) ((clas << 5) | (det))
 typedef enum
 {
     COAP_RSPCODE_EMPTY                      = MAKE_RSPCODE(0, 0),
@@ -222,20 +224,40 @@ typedef enum
     COAP_ERR_UNSUPPORTED                    = 10,
     COAP_ERR_OPTION_DELTA_INVALID           = 11,
     COAP_ERR_OPTION_NOT_FOUND               = 12,
+    COAP_ERR_REQUEST_NOT_FOUND,
+    COAP_ERR_REQUEST_MSGID_MISMATCH,
+    COAP_ERR_REQUEST_TOKEN_MISMATCH,
+    COAP_ERR_RESPONSE,
+    COAP_ERR_MAX                            = 99,
 } coap_error_t;
-#define COAP_SUCCESS COAP_ERR_NONE
+#define COAP_SUCCESS COAP_ERR_NONE  //!< Success return value if no error occured
+
+typedef enum {
+    COAP_STATE_RDY                          = (COAP_ERR_MAX + 1),
+    COAP_STATE_ACK_RECV,
+    COAP_STATE_ACK_SEND,
+    COAP_STATE_ACK_WAIT,
+    COAP_STATE_RSP_RECV,
+    COAP_STATE_RSP_SEND,
+    COAP_STATE_RSP_WAIT,
+    COAP_STATE_REQ_RECV,
+    COAP_STATE_REQ_SEND,
+    COAP_STATE_REQ_WAIT,
+} coap_state_t;
+
+
 ///////////////////////
 
-#ifndef COAP_MAX_SEGMENTS
-#define COAP_MAX_SEGMENTS 3  // 2 = /foo/bar, 3 = /foo/bar/baz
+#ifndef COAP_MAX_PATHITEMS
+#define COAP_MAX_PATHITEMS 2  //!< number of path elements
 #endif
 /**
  * Describes the path elements of a CoAP resource
  */
 typedef struct coap_resource_path
 {
-    int count;                              //!< number of elements
-    const char *elems[COAP_MAX_SEGMENTS];   //!< resource path elements
+    int count;                               //!< number of items
+    const char *items[COAP_MAX_PATHITEMS];   //!< resource path items
 } coap_resource_path_t;
 
 typedef struct coap_resource coap_resource_t;
@@ -243,6 +265,7 @@ typedef struct coap_resource coap_resource_t;
 /**
  * @brief callback function for resource handler
  *
+ * @param[in] state State of recursive request handling
  * @param[in] resource Pointer to associated resource handled
  * @param[in] inpkt Pointer to the (incoming) request packet
  * @param[out] pkt Ponter to the (outgoing) response packet
@@ -258,22 +281,35 @@ typedef int (*coap_resource_handler)(const coap_resource_t *resource,
  */
 struct coap_resource
 {
+    coap_state_t state;                 //!< message handling state
     const coap_method_t method;         //!< method POST, PUT or GET
+    const coap_msgtype_t msg_type;      //!< message type CON, NONCON, ACK
     coap_resource_handler handler;      //!< callback function for method
     const coap_resource_path_t *path;   //!< resource path, e.g. foo/bar/
     const uint8_t content_type[2];      //!< content type of response
 };
 
+/**
+ * @brief Set content type
+ *
+ * Writes uint16_t CoAP content type to a uint8_t[2] array
+ * @param[in] ct Content type given as uint16_t
+ */
 #define COAP_SET_CONTENTTYPE(ct)   {(uint8_t)(((int16_t)ct & 0xFF00) >> 8), (uint8_t)(((int16_t)ct & 0x00FF))}
 
-inline int16_t COAP_GET_CONTENTTYPE(const uint8_t *buf, const size_t buflen)
-{
-    if (buf && (buflen == 2))
-        return ((int16_t)(buf[0] << 8 | buf[1]));
-    return COAP_CONTENTTYPE_NONE;
-}
+/**
+ * @brief Get content type
+ *
+ * Read uint16_t CoAP content type from a uint8_t[2] array
+ * @param[in] buf Pointer to buffer with content type
+ * @param[in] buflen The lenth of \p buf in bytes.
+ * @return content type
+ */
+int16_t COAP_GET_CONTENTTYPE(const uint8_t *buf, const size_t buflen);
 
 /**
+ * @brief Parse CoAP packet/message from transmission buffer
+ *
  * Parses the content of \p buf (i.e. the content of a UDP packet) and
  * writes the values to \p pkt.
  *
@@ -286,6 +322,8 @@ inline int16_t COAP_GET_CONTENTTYPE(const uint8_t *buf, const size_t buflen)
 int coap_parse(const uint8_t *buf, const size_t buflen, coap_packet_t *pkt);
 
 /**
+ * @brief Writes CoAP packet/message to transmission buffer
+ *
  * Creates a CoAP message from the data in \p pkt and writes the
  * result to \p buf. The actual size of the whole message (which
  * may be smaller than the size of the buffer) will be written to
@@ -307,6 +345,8 @@ int coap_parse(const uint8_t *buf, const size_t buflen, coap_packet_t *pkt);
 int coap_build(const coap_packet_t *pkt, uint8_t *buf, size_t *buflen);
 
 /**
+ * @brief Create CoAP acknowledgement
+ *
  * Creates an ACK packet for the given message ID, and stores it in the
  * coap_packet_t structure pointed to by \p pkt.
  *
@@ -316,14 +356,12 @@ int coap_build(const coap_packet_t *pkt, uint8_t *buf, size_t *buflen);
  *
  * @return Always returns 0.
  */
-int coap_make_ack(const uint16_t msgid, const coap_buffer_t* tok,
-                  coap_packet_t *pkt);
+int coap_make_ack(const coap_packet_t *inpkt, coap_packet_t *pkt);
 
 /**
  *
  */
 int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
-                      const coap_msgtype_t msgtype,
                       const coap_resource_t *resource,
                       const uint8_t *content, const size_t content_len,
                       coap_packet_t *pkt);
@@ -359,8 +397,7 @@ int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,
  * Handles the CoAP request in \p inpkt, and creates a response packet which is
  * stored in \p pkt.
  *
- * @param[in] resources Pointer to the coap_resource_t array of all resources.
- * @param[in] resources_len length of resources' array
+ * @param[in/out] resources Pointer to the coap_resource_t array of all resources.
  * @param[in] inpkt Pointer to the coap_packet_t structure containing the
  * request.
  * @param[out] pkt Pointer to the coap_packet_t structure that will be
@@ -368,24 +405,26 @@ int coap_make_response(const uint16_t msgid, const coap_buffer_t* tok,
  *
  * @return 0 on success, or a reasonable error code on failure.
  */
-int coap_handle_request(const coap_resource_t *resources, size_t resources_len,
+int coap_handle_request(coap_resource_t *resources,
                         const coap_packet_t *inpkt,
                         coap_packet_t *pkt);
 
-int coap_handle_response();
+int coap_handle_response(coap_resource_t *resources,
+                        const coap_packet_t *reqpkt,
+                        coap_packet_t *rsppkt);
 int coap_handle_packet();
+
 /**
  * @brief Create link format of resources
  *
  * @param[in] resources Array describing all available coap_resource_t
- * @param[in] resources_len length of resources' array
  * @param[out] buf Char buffer to which resource link format will be written to.
  * @param[in,out] buflen Contains the initial size of \p buf, then stores how
  * many bytes have been written to \p buf.
  *
  * @return 0 on success, or COAP_ERR_BUFFER_TOO_SMALL if buflen is exceeded.
  */
-int coap_make_link_format(const coap_resource_t *resources, size_t resources_len,
+int coap_make_link_format(const coap_resource_t *resources,
                           char *buf, size_t buflen);
 
 const coap_option_t *coap_find_uri_path(const coap_packet_t *pkt,

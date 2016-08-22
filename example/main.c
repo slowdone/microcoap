@@ -9,7 +9,7 @@
 #include "coap_dump.h"
 
 extern void resource_setup(const coap_resource_t *resources);
-extern const coap_resource_t resources[];
+extern coap_resource_t resources[];
 
 int main(void)
 {

@@ -305,7 +305,7 @@ struct coap_resource
  * @param[in] buf Pointer to buffer with content type
  * @return content type
  */
-#define COAP_GET_CONTENTTYPE(buf)   (((uint16_t)buf[0] << 8) | buf[1])
+#define COAP_GET_CONTENTTYPE(buf)   ((int16_t) ((int16_t)buf[0] << 8) | buf[1])
 
 /**
  * @brief Parse CoAP packet/message from transmission buffer

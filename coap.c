@@ -59,13 +59,6 @@ static void _option_nibble(const uint32_t value, uint8_t *nibble)
 }
 
 /* --- PUBLIC --------------------------------------------------------------- */
-int16_t COAP_GET_CONTENTTYPE(const uint8_t *buf, const size_t buflen)
-{
-    if (buf && (buflen == 2))
-        return ((int16_t)(buf[0] << 8 | buf[1]));
-    return COAP_CONTENTTYPE_NONE;
-}
-
 int coap_build(const coap_packet_t *pkt, uint8_t *buf, size_t *buflen)
 {
     // build header
@@ -170,7 +163,7 @@ int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
         pkt->numopts++;
     }
     // set content type, if present afterwards
-    if (COAP_GET_CONTENTTYPE(resource->content_type, 2) != COAP_CONTENTTYPE_NONE) {
+    if (COAP_GET_CONTENTTYPE(resource->content_type) != COAP_CONTENTTYPE_NONE) {
         pkt->opts[i].num = COAP_OPTION_CONTENT_FORMAT;
         pkt->opts[i].buf.p = resource->content_type;
         pkt->opts[i].buf.len = 2;
@@ -179,7 +172,7 @@ int coap_make_request(const uint16_t msgid, const coap_buffer_t* tok,
     // attach payload
     pkt->payload.p = content;
     pkt->payload.len = content_len;
-    return COAP_SUCCESS;
+    return COAP_STATE_REQ_SEND;
 }
 
 int coap_make_ack(const coap_packet_t *inpkt, coap_packet_t *pkt)
@@ -308,7 +301,7 @@ int coap_make_link_format(const coap_resource_t *resources,
         if (0 > len)
             return COAP_ERR_BUFFER_TOO_SMALL;
         // skip if missing content type
-        if (COAP_CONTENTTYPE_NONE == COAP_GET_CONTENTTYPE(rs->content_type, 2))
+        if (COAP_CONTENTTYPE_NONE == COAP_GET_CONTENTTYPE(rs->content_type))
             continue;
         // comma separated list
         if (0 < strlen(buf)) {
@@ -331,7 +324,7 @@ int coap_make_link_format(const coap_resource_t *resources,
         len -= 2;
         // append content type
         len -= sprintf(buf + (buflen - len - 1), "ct=%d",
-                       COAP_GET_CONTENTTYPE(rs->content_type, 2));
+                       COAP_GET_CONTENTTYPE(rs->content_type));
     }
     return COAP_SUCCESS;
 }

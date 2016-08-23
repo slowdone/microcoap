@@ -294,18 +294,18 @@ struct coap_resource
  *
  * Writes uint16_t CoAP content type to a uint8_t[2] array
  * @param[in] ct Content type given as uint16_t
+ * @return array with content type
  */
-#define COAP_SET_CONTENTTYPE(ct)   {(uint8_t)(((int16_t)ct & 0xFF00) >> 8), (uint8_t)(((int16_t)ct & 0x00FF))}
+#define COAP_SET_CONTENTTYPE(ct)    {(uint8_t)(((int16_t)ct & 0xFF00) >> 8), (uint8_t)(((int16_t)ct & 0x00FF))}
 
 /**
  * @brief Get content type
  *
  * Read uint16_t CoAP content type from a uint8_t[2] array
  * @param[in] buf Pointer to buffer with content type
- * @param[in] buflen The lenth of \p buf in bytes.
  * @return content type
  */
-int16_t COAP_GET_CONTENTTYPE(const uint8_t *buf, const size_t buflen);
+#define COAP_GET_CONTENTTYPE(buf)   ((int16_t) ((int16_t)buf[0] << 8) | buf[1])
 
 /**
  * @brief Parse CoAP packet/message from transmission buffer

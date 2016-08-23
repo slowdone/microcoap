@@ -89,7 +89,7 @@ int main(void)
 
         n = recvfrom(fd, buf, sizeof(buf), 0, (struct sockaddr *)&cliaddr, &len);
         printf("received message of %d bytes\n", n);
-        
+
         if (0 != (rc = coap_parse(buf, n, &pkt))) {
             printf("Bad packet rc=%d\n", rc);
         }

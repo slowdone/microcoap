@@ -22,7 +22,7 @@ inline void coap_set_content_type(coap_resource_ext_t *resource, coap_content_ty
 
 inline coap_resource_t coap_convert_resource_ext(coap_resource_ext_t *resource) {
     return (coap_resource_t) { COAP_STATE_RDY, resource->method, COAP_TYPE_ACK, NULL, resource->path, 
-        COAP_SET_CONTENTTYPE(COAP_GET_CONTENTTYPE(resource->content_type, sizeof(resource->content_type)))};
+        COAP_SET_CONTENTTYPE(COAP_GET_CONTENTTYPE(resource->content_type))};
 }
 
 inline coap_resource_t coap_make_request_resource(const coap_method_t method, const coap_resource_path_t* resource_path) {

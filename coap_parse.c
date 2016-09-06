@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#include "inet.h"
+#include "arpa_inet.h"
 #include "coap.h"
 
 /* --- PRIVATE -------------------------------------------------------------- */

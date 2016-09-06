@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stddef.h>
 
-#include "inet.h"
+#include "arpa_inet.h"
 #include "coap.h"
 
 /* --- PRIVATE -------------------------------------------------------------- */

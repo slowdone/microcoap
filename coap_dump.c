@@ -11,7 +11,7 @@ static void _dump_options(const coap_option_t *opts, const size_t numopt);
 /* --- PRIVATE -------------------------------------------------------------- */
 static void _dump_header(const coap_header_t *hdr)
 {
-    printf("Header:\n", "");
+    printf("Header:\n");
     printf("  ver  0x%02X\n", hdr->ver);
     printf("  t    0x%02X\n", hdr->t);
     printf("  tkl  0x%02X\n", hdr->tkl);
@@ -21,11 +21,11 @@ static void _dump_header(const coap_header_t *hdr)
 
 static void _dump_options(const coap_option_t *opts, const size_t numopt)
 {
-    printf(" Options:\n", "");
+    printf(" Options:\n");
     for (size_t i = 0; i < numopt; ++i) {
         printf("  0x%02X [ ", opts[i].num);
         coap_dump(opts[i].buf.p, opts[i].buf.len, true);
-        printf(" ]\n", "");
+        printf(" ]\n");
     }
 }
 
@@ -42,7 +42,7 @@ void coap_dump(const uint8_t *buf, size_t buflen, bool bare)
         while(buflen--) {
             printf("%02X%s", *buf++, (buflen > 0) ? " " : "");
         }
-        printf("\n", "");
+        printf("\n");
     }
 }
 
@@ -52,6 +52,6 @@ void coap_dump_packet(const coap_packet_t *pkt)
     _dump_options(pkt->opts, pkt->numopts);
     printf("Payload: ");
     coap_dump(pkt->payload.p, pkt->payload.len, true);
-    printf("\n", "");
+    printf("\n");
 }
 

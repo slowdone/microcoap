@@ -32,12 +32,14 @@ static int handle_request_put_response(const coap_resource_t *resource,
 
 coap_resource_t resources[] =
 {
-    {COAP_STATE_RDY, COAP_METHOD_PUT, COAP_TYPE_CON,
+    {   COAP_STATE_RDY, COAP_METHOD_PUT, COAP_TYPE_CON,
         handle_request_put_response, NULL,
-        COAP_SET_CONTENTTYPE(COAP_CONTENTTYPE_TXT_PLAIN)},
-    {(coap_state_t)0, (coap_method_t)0, (coap_msgtype_t)0,
+        COAP_SET_CONTENTTYPE(COAP_CONTENTTYPE_TXT_PLAIN)
+    },
+    {   (coap_state_t)0, (coap_method_t)0, (coap_msgtype_t)0,
         NULL, NULL,
-        COAP_SET_CONTENTTYPE(COAP_CONTENTTYPE_NONE)}
+        COAP_SET_CONTENTTYPE(COAP_CONTENTTYPE_NONE)
+    }
 };
 
 int main(int argc, char *argv[])

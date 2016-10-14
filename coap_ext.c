@@ -9,7 +9,7 @@ int coap_build_resource_path(coap_resource_path_t* resource_path, char* path)
     uint8_t max_segments = sizeof(resource_path->items) / sizeof(const char*);
     char* pch = strtok (path, "/");
     uint8_t i = 0;
-    for ( ;(i < max_segments) && (pch != NULL); ++i) {
+    for ( ; (i < max_segments) && (pch != NULL); ++i) {
         resource_path->items[i] = pch;
         pch = strtok (NULL, "/");
     }
@@ -32,6 +32,6 @@ int coap_check_resource(const coap_resource_ext_t *resource,
                 return COAP_ERR_NONE;
             }
         }
-    } 
+    }
     return COAP_ERR_OPTION_LEN_INVALID;
 }

@@ -149,6 +149,8 @@ typedef enum
 } coap_msgtype_t;
 
 #define MAKE_RSPCODE(clas, det) ((clas << 5) | (det))   //!< Set CoAP response code
+#define RSPCODE_IS_SUCCESS(x)   ((x >> 5) == 2)         //!< Check if request succeeded
+
 /*
  * Definition of COAP response codes, for further details see following
  * (upcoming) standard documents:
@@ -230,6 +232,9 @@ typedef enum
     COAP_ERR_RESPONSE,
     COAP_ERR_MAX                            = 99,
 } coap_error_t;
+
+#define COAP_IS_ERROR(x)        ((x) <= COAP_ERR_MAX)   //!< Check if error occurred
+
 #define COAP_SUCCESS COAP_ERR_NONE  //!< Success return value if no error occured
 
 typedef enum {
@@ -427,6 +432,26 @@ int coap_handle_packet();
 int coap_make_link_format(const coap_resource_t *resources,
                           char *buf, size_t buflen);
 
+/**
+ * Find the first option of type @p num.
+ *
+ * @param pkt pointer to the coap packet.
+ * @param num option type number.
+ *
+ * @return option found or NULL if not found.
+ */
+const coap_option_t *coap_find_option(const coap_packet_t *pkt,
+                                          const coap_option_num_t num);
+
+/**
+ *
+ * Find the URI PATH option and the number of them.
+ *
+ * @param pkt pointer to the coap packet.
+ * @param num option type number.
+ *
+ * @return option found or NULL if not found.
+ */
 const coap_option_t *coap_find_uri_path(const coap_packet_t *pkt,
                                           uint8_t *count);
 

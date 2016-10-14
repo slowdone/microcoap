@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stddef.h>
 
-#include "arpa_inet.h"
+#include "inet.h"
 #include "coap.h"
 
 /* --- PRIVATE -------------------------------------------------------------- */
@@ -24,12 +24,13 @@ static const coap_option_t *_find_options(const coap_packet_t *pkt,
 {
     const coap_option_t * first = NULL;
     /* loop through packet opts */
-    *count = 0;
+    if (count) *count = 0;
     for (size_t i = 0; i < pkt->numopts; ++i) {
         if (pkt->opts[i].num == num) {
             if (!first) {
                 first = &pkt->opts[i];
             }
+            if (NULL == count) break;
             (*count)++;
         }
         /* options are ordered by num, skip if greater */
@@ -223,7 +224,7 @@ int coap_handle_request(coap_resource_t *resources,
     const coap_option_t *opt = _find_options(inpkt, COAP_OPTION_URI_PATH, &count);
     // find handler for requested resource
     for (coap_resource_t *rs = resources; rs->handler && opt; ++rs) {
-        if ((rs->method == inpkt->hdr.code) && (count == rs->path->count)){
+        if ((rs->method == inpkt->hdr.code) && (count == rs->path->count)) {
             int i;
             for (i = 0; i < count; ++i) {
                 if (opt[i].buf.len != strlen(rs->path->items[i])) {
@@ -268,7 +269,8 @@ int coap_handle_response(coap_resource_t *resources,
     uint8_t count;
     const coap_option_t *opt = _find_options(reqpkt, COAP_OPTION_URI_PATH, &count);
     // find handler for requested resource
-    for (coap_resource_t *rs = resources; rs->handler && opt; ++rs) {
+    for (coap_resource_t *rs = resources; rs->handler; ++rs) {
+        if (reqpkt->hdr.code != rs->method) continue;
         if (count == rs->path->count) {
             int i;
             for (i = 0; i < count; ++i) {
@@ -332,4 +334,10 @@ const coap_option_t *coap_find_uri_path(const coap_packet_t *pkt,
                                         uint8_t *count)
 {
     return _find_options(pkt, COAP_OPTION_URI_PATH, count);
+}
+
+const coap_option_t *coap_find_option(const coap_packet_t *pkt,
+                                      const coap_option_num_t num)
+{
+    return _find_options(pkt, num, NULL);
 }
